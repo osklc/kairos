@@ -22,4 +22,24 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Debug
 *.bat
+
+# Rust
+src-tauri/target/
+
+# Node
+node_modules/
+dist/
+
+# Ortam dosyaları
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code (isteğe bağlı, paylaşmak istersen kaldır)
+.vscode/
