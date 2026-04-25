@@ -1,173 +1,224 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Screen Time Tracker Dashboard</title>
-    <script type="module" src="/main.js" defer></script>
-  </head>
 
-  <body>
-    <main class="app-shell">
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-top">
-          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
-            <span></span>
-            <span></span>
-            <span></span>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Time Tracker Dashboard</title>
+  <script type="module" src="/main.js" defer></script>
+</head>
+
+<body>
+  <!-- App Category Prompt Modal -->
+  <div id="category-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 data-i18n="modal.newAppDetected">New App Detected</h3>
+      <p><span data-i18n="modal.howToCategorize">How would you categorize</span> <strong
+          id="modal-app-name">App</strong>?</p>
+      <div class="modal-buttons">
+        <button class="btn-productive" data-cat="productive" data-i18n="modal.productive">Productive</button>
+        <button class="btn-neutral" data-cat="neutral" data-i18n="modal.neutral">Neutral</button>
+        <button class="btn-distracting" data-cat="distracting" data-i18n="modal.distracting">Distracting</button>
+      </div>
+      <button class="btn-skip" id="modal-btn-skip" data-i18n="modal.skip">Skip for now</button>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1 class="brand" data-i18n="brand.title">Screen Time</h1>
+      </div>
+
+      <nav class="side-nav" aria-label="Primary">
+        <button class="nav-link active" type="button" data-page="overview">
+          <svg class="icon" aria-hidden="true" focusable="false">
+            <use href="/assets/sidebar-icons.svg#icon-overview"></use>
+          </svg>
+          <span class="label" data-i18n="nav.overview">Overview</span>
+        </button>
+
+        <div class="nav-group open" id="analytics-group">
+          <button class="nav-group-trigger" id="analytics-trigger" type="button" aria-expanded="true">
+            <svg class="icon" aria-hidden="true" focusable="false">
+              <use href="/assets/sidebar-icons.svg#icon-analytics"></use>
+            </svg>
+            <span class="label" data-i18n="nav.analytics">Analytics</span>
+            <span class="caret">▼</span>
           </button>
-          <h1 class="brand" data-i18n="brand.title">Screen Time</h1>
+          <div class="nav-group-items" id="analytics-items">
+            <button class="nav-link" type="button" data-page="apps">
+              <svg class="icon" aria-hidden="true" focusable="false">
+                <use href="/assets/sidebar-icons.svg#icon-apps"></use>
+              </svg>
+              <span class="label" data-i18n="nav.appUsage">App Usage</span>
+            </button>
+            <button class="nav-link" type="button" data-page="hourly">
+              <svg class="icon" aria-hidden="true" focusable="false">
+                <use href="/assets/sidebar-icons.svg#icon-hourly"></use>
+              </svg>
+              <span class="label" data-i18n="nav.hourlyTrend">Hourly Trend</span>
+            </button>
+            <button class="nav-link" type="button" data-page="focus">
+              <svg class="icon" aria-hidden="true" focusable="false">
+                <use href="/assets/sidebar-icons.svg#icon-focus"></use>
+              </svg>
+              <span class="label" data-i18n="nav.focusSessions">Focus Sessions</span>
+            </button>
+          </div>
         </div>
 
-        <nav class="side-nav" aria-label="Primary">
-          <button class="nav-link active" type="button" data-page="overview">
-            <span class="icon">&#9679;</span>
-            <span class="label" data-i18n="nav.overview">Overview</span>
-          </button>
+        <button class="nav-link" type="button" data-page="goals">
+          <svg class="icon" aria-hidden="true" focusable="false">
+            <use href="/assets/sidebar-icons.svg#icon-goals"></use>
+          </svg>
+          <span class="label" data-i18n="nav.goals">Goals</span>
+        </button>
 
-          <div class="nav-group open" id="analytics-group">
-            <button class="nav-group-trigger" id="analytics-trigger" type="button" aria-expanded="true">
-              <span class="icon">&#9724;</span>
-              <span class="label" data-i18n="nav.analytics">Analytics</span>
-              <span class="caret">&#9662;</span>
-            </button>
-            <div class="nav-group-items" id="analytics-items">
-              <button class="nav-link" type="button" data-page="apps">
-                <span class="icon">&#9632;</span>
-                <span class="label" data-i18n="nav.appUsage">App Usage</span>
-              </button>
-              <button class="nav-link" type="button" data-page="hourly">
-                <span class="icon">&#9632;</span>
-                <span class="label" data-i18n="nav.hourlyTrend">Hourly Trend</span>
-              </button>
-              <button class="nav-link" type="button" data-page="focus">
-                <span class="icon">&#9632;</span>
-                <span class="label" data-i18n="nav.focusSessions">Focus Sessions</span>
-              </button>
-            </div>
-          </div>
+        <button class="nav-link" type="button" data-page="notes">
+          <svg class="icon" aria-hidden="true" focusable="false">
+            <use href="/assets/sidebar-icons.svg#icon-notes"></use>
+          </svg>
+          <span class="label" data-i18n="nav.notes">Notes</span>
+        </button>
 
-          <button class="nav-link" type="button" data-page="goals">
-            <span class="icon">&#9651;</span>
-            <span class="label" data-i18n="nav.goals">Goals</span>
-          </button>
+        <button class="nav-link" type="button" data-page="settings">
+          <svg class="icon" aria-hidden="true" focusable="false">
+            <use href="/assets/sidebar-icons.svg#icon-settings"></use>
+          </svg>
+          <span class="label" data-i18n="nav.settings">Settings</span>
+        </button>
+      </nav>
+    </aside>
 
-          <button class="nav-link" type="button" data-page="notes">
-            <span class="icon">&#9671;</span>
-            <span class="label" data-i18n="nav.notes">Notes</span>
-          </button>
+    <section class="content-area">
+      <header class="topbar">
+        <h2 id="page-title" data-i18n="pages.overview">Overview</h2>
+        <p id="current-date">May 19, 1881</p>
+      </header>
 
-          <button class="nav-link" type="button" data-page="settings">
-            <span class="icon">&#9881;</span>
-            <span class="label" data-i18n="nav.settings">Settings</span>
-          </button>
-        </nav>
-      </aside>
-
-      <section class="content-area">
-        <header class="topbar">
-          <h2 id="page-title" data-i18n="pages.overview">Overview</h2>
-          <p data-i18n="meta.today">March 28, 2026</p>
-        </header>
-
-        <section class="page active" id="page-overview" aria-label="Overview page">
-          <div class="cards-grid">
-            <article class="card">
-              <h3 data-i18n="overview.totalScreenTime">Total Screen Time</h3>
-              <p>6h 42m</p>
-            </article>
-            <article class="card">
-              <h3 data-i18n="overview.productiveTime">Productive Time</h3>
-              <p>4h 18m</p>
-            </article>
-            <article class="card">
-              <h3 data-i18n="overview.breakCount">Break Count</h3>
-              <p>7</p>
-            </article>
-            <article class="card">
-              <h3 data-i18n="overview.longestSession">Longest Session</h3>
-              <p>1h 25m</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="page" id="page-apps" aria-label="App usage page">
-          <article class="panel">
-            <h3 data-i18n="apps.title">Most Used Apps</h3>
-            <ul>
-              <li data-i18n="apps.item1">VS Code: 2h 10m</li>
-              <li data-i18n="apps.item2">Chrome: 1h 45m</li>
-              <li data-i18n="apps.item3">Slack: 52m</li>
-              <li data-i18n="apps.item4">Spotify: 38m</li>
-            </ul>
+      <section class="page active" id="page-overview" aria-label="Overview page">
+        <div class="cards-grid">
+          <article class="card">
+            <h3 data-i18n="overview.activeWindow">Active Window</h3>
+            <p id="active-window-display">Waiting...</p>
           </article>
-        </section>
-
-        <section class="page" id="page-hourly" aria-label="Hourly trend page">
-          <article class="panel">
-            <h3 data-i18n="hourly.title">Hourly Activity Trend</h3>
-            <p data-i18n="hourly.item1">08:00 - 12:00: High focus</p>
-            <p data-i18n="hourly.item2">12:00 - 14:00: Breaks and meetings</p>
-            <p data-i18n="hourly.item3">14:00 - 18:00: Moderate productivity</p>
+          <article class="card">
+            <h3 data-i18n="overview.totalScreenTime">Total Screen Time</h3>
+            <p id="stat-total-time">0h 0m</p>
           </article>
-        </section>
-
-        <section class="page" id="page-focus" aria-label="Focus session page">
-          <article class="panel">
-            <h3 data-i18n="focus.title">Focus Sessions</h3>
-            <ol>
-              <li data-i18n="focus.item1">09:00 - 10:20 Deep Work</li>
-              <li data-i18n="focus.item2">11:00 - 12:10 Coding Sprint</li>
-              <li data-i18n="focus.item3">15:00 - 16:15 Bug Fixing</li>
-            </ol>
+          <article class="card">
+            <h3 data-i18n="overview.productiveTime">Productive Time</h3>
+            <p id="stat-productive-time">0h 0m</p>
           </article>
-        </section>
-
-        <section class="page" id="page-goals" aria-label="Goals page">
-          <article class="panel">
-            <h3 data-i18n="goals.title">Daily Goals</h3>
-            <ul>
-              <li data-i18n="goals.item1">Keep social media use under 30 minutes</li>
-              <li data-i18n="goals.item2">Take a 5-minute break every hour</li>
-              <li data-i18n="goals.item3">Keep productive time above 4 hours</li>
-            </ul>
+          <article class="card">
+            <h3 data-i18n="overview.breakCount">Break Count</h3>
+            <p id="stat-break-count">0</p>
           </article>
-        </section>
-
-        <section class="page" id="page-notes" aria-label="Notes page">
-          <article class="panel">
-            <h3 data-i18n="notes.title">Quick Note</h3>
-            <form class="row" id="greet-form">
-              <input id="greet-input" placeholder="Write your note..." data-i18n-placeholder="notes.inputPlaceholder" />
-              <button type="submit" data-i18n="notes.save">Save</button>
-            </form>
-            <p id="greet-msg"></p>
+          <article class="card">
+            <h3 data-i18n="overview.longestSession">Longest Session</h3>
+            <p id="stat-longest-session">0h 0m</p>
           </article>
-        </section>
-
-        <section class="page" id="page-settings" aria-label="Settings page">
-          <article class="panel settings-panel">
-            <h3 data-i18n="settings.title">Settings</h3>
-
-            <div class="setting-item">
-              <label for="language-select" data-i18n="settings.language">Language</label>
-              <select id="language-select">
-                <option value="en" data-i18n="settings.langEnglish">English</option>
-                <option value="tr" data-i18n="settings.langTurkish">Turkish</option>
-              </select>
-            </div>
-
-            <div class="setting-item">
-              <p class="setting-label" data-i18n="settings.theme">Theme</p>
-              <div class="theme-buttons">
-                <button type="button" id="theme-white" class="theme-btn" data-theme-option="white" data-i18n="settings.themeWhite">White</button>
-                <button type="button" id="theme-black" class="theme-btn" data-theme-option="black" data-i18n="settings.themeBlack">Black</button>
-              </div>
-            </div>
-          </article>
-        </section>
+        </div>
       </section>
-    </main>
-  </body>
+
+      <section class="page" id="page-apps" aria-label="App usage page">
+        <article class="panel">
+          <h3 data-i18n="apps.title">Most Used Apps</h3>
+          <ul id="app-usage-list">
+            <!-- App usage items injected here -->
+          </ul>
+        </article>
+      </section>
+
+      <section class="page" id="page-hourly" aria-label="Hourly trend page">
+        <article class="panel">
+          <h3 data-i18n="hourly.title">Hourly Activity Trend</h3>
+          <p data-i18n="hourly.item1">08:00 - 12:00: High focus</p>
+          <p data-i18n="hourly.item2">12:00 - 14:00: Breaks and meetings</p>
+          <p data-i18n="hourly.item3">14:00 - 18:00: Moderate productivity</p>
+        </article>
+      </section>
+
+      <section class="page" id="page-focus" aria-label="Focus session page">
+        <article class="panel">
+          <h3 data-i18n="focus.title">Focus Sessions</h3>
+          <ol>
+            <li data-i18n="focus.item1">09:00 - 10:20 Deep Work</li>
+            <li data-i18n="focus.item2">11:00 - 12:10 Coding Sprint</li>
+            <li data-i18n="focus.item3">15:00 - 16:15 Bug Fixing</li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="page" id="page-goals" aria-label="Goals page">
+        <article class="panel">
+          <h3 data-i18n="goals.title">Daily Goals</h3>
+          <ul>
+            <li data-i18n="goals.item1">Keep social media use under 30 minutes</li>
+            <li data-i18n="goals.item2">Take a 5-minute break every hour</li>
+            <li data-i18n="goals.item3">Keep productive time above 4 hours</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="page" id="page-notes" aria-label="Notes page">
+        <article class="panel">
+          <h3 data-i18n="notes.title">Quick Note</h3>
+          <form class="row" id="greet-form">
+            <input id="greet-input" placeholder="Write your note..." data-i18n-placeholder="notes.inputPlaceholder" />
+            <button type="submit" data-i18n="notes.save">Save</button>
+          </form>
+          <p id="greet-msg"></p>
+        </article>
+      </section>
+
+      <section class="page" id="page-settings" aria-label="Settings page">
+        <article class="panel settings-panel">
+          <h3 data-i18n="settings.title">Settings</h3>
+
+          <div class="setting-item">
+            <label for="language-select" data-i18n="settings.language">Language</label>
+            <select id="language-select">
+              <option value="en" data-i18n="settings.langEnglish">English</option>
+              <option value="tr" data-i18n="settings.langTurkish">Turkish</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <p class="setting-label" data-i18n="settings.theme">Theme</p>
+            <div class="theme-buttons">
+              <button type="button" id="theme-white" class="theme-btn" data-theme-option="white"
+                data-i18n="settings.themeWhite">White</button>
+              <button type="button" id="theme-black" class="theme-btn" data-theme-option="black"
+                data-i18n="settings.themeBlack">Black</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <p class="setting-label" data-i18n="settings.categorizeApps">Categorize Apps</p>
+            <div class="app-category-list" id="app-category-list">
+              <!-- App items will be injected here -->
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <p class="setting-label" data-i18n="settings.debugOptions">Debug Options</p>
+            <button type="button" id="show-db-btn" style="max-width: 200px;" data-i18n="settings.showDb">Veritabanını
+              Göster</button>
+            <pre id="db-output"
+              style="font-size: 12px; white-space: pre-wrap; background: var(--field-bg); padding: 10px; border-radius: 8px; border: 1px solid var(--field-border); margin-top: 10px; max-height: 200px; overflow-y: auto; display: none;"></pre>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+</body>
+
 </html>

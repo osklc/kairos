@@ -10,9 +10,11 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "screen-time-tracker",
-        "width": 800,
-        "height": 600
+        "title": "Screen Time",
+        "width": 1000,
+        "height": 600,
+        "minWidth": 1000,
+        "minHeight": 600
       }
     ],
     "security": {
