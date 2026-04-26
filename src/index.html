@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="styles.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Screen Time Tracker Dashboard</title>
+  <title>Kairos: Screen Time Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="/main.js" defer></script>
 </head>
 
@@ -64,6 +65,12 @@
                 <use href="/assets/sidebar-icons.svg#icon-hourly"></use>
               </svg>
               <span class="label" data-i18n="nav.hourlyTrend">Hourly Trend</span>
+            </button>
+            <button class="nav-link" type="button" data-page="daily">
+              <svg class="icon" aria-hidden="true" focusable="false">
+                <use href="/assets/sidebar-icons.svg#icon-analytics"></use>
+              </svg>
+              <span class="label" data-i18n="nav.dailyCharts">Daily Charts</span>
             </button>
             <button class="nav-link" type="button" data-page="focus">
               <svg class="icon" aria-hidden="true" focusable="false">
@@ -141,6 +148,15 @@
           <ul id="app-usage-list">
             <!-- App usage items injected here -->
           </ul>
+        </article>
+      </section>
+
+      <section class="page" id="page-daily" aria-label="Daily charts page">
+        <article class="panel">
+          <h3 data-i18n="daily.title">Daily Screen Time</h3>
+          <div class="chart-container" style="position: relative; height:40vh; width:100%">
+            <canvas id="daily-chart"></canvas>
+          </div>
         </article>
       </section>
 
@@ -256,6 +272,17 @@
             </select>
           </div>
 
+          <div class="setting-item setting-row">
+            <input type="checkbox" id="autostart-toggle" />
+            <label class="setting-label" for="autostart-toggle" data-i18n="settings.autostart">Launch on Startup</label>
+          </div>
+
+          <div class="setting-item setting-row">
+            <input type="checkbox" id="disable-prompt-toggle" />
+            <label class="setting-label" for="disable-prompt-toggle" data-i18n="settings.disableCategoryPrompt">Disable
+              new app category prompts</label>
+          </div>
+
           <div class="setting-item">
             <p class="setting-label" data-i18n="settings.theme">Theme</p>
             <div class="theme-buttons">
@@ -263,6 +290,16 @@
                 data-i18n="settings.themeWhite">White</button>
               <button type="button" id="theme-black" class="theme-btn" data-theme-option="black"
                 data-i18n="settings.themeBlack">Black</button>
+              <button type="button" id="theme-midnight" class="theme-btn" data-theme-option="midnight"
+                data-i18n="settings.themeMidnight">Midnight</button>
+              <button type="button" id="theme-nord" class="theme-btn" data-theme-option="nord"
+                data-i18n="settings.themeNord">Nord</button>
+              <button type="button" id="theme-cyberpunk" class="theme-btn" data-theme-option="cyberpunk"
+                data-i18n="settings.themeCyberpunk">Cyberpunk</button>
+              <button type="button" id="theme-rosepine" class="theme-btn" data-theme-option="rosepine"
+                data-i18n="settings.themeRosePine">Rose Pine</button>
+              <button type="button" id="theme-forest" class="theme-btn" data-theme-option="forest"
+                data-i18n="settings.themeForest">Forest</button>
             </div>
           </div>
 

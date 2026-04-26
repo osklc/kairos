@@ -25,6 +25,12 @@ struct AskCategoryPayload {
     app_name: String,
 }
 
+#[derive(Serialize)]
+struct DailyStat {
+    day: String,
+    total_seconds: i64,
+}
+
 struct CurrentSession {
     app_name: String,
     start_time: i64,
@@ -36,16 +42,34 @@ fn normalize_app_name(raw_name: &str, title: &str) -> String {
     
     if raw_lower.contains("spotify") {
         return "Spotify".to_string();
-    } else if raw_lower.contains("chrome") {
-        return "Google Chrome".to_string();
-    } else if raw_lower.contains("msedge") {
-        return "Microsoft Edge".to_string();
-    } else if raw_lower.contains("brave") {
-        return "Brave Browser".to_string();
+    } else if raw_lower.contains("chrome") || raw_lower.contains("msedge") || raw_lower.contains("brave") || raw_lower.contains("firefox") {
+        let base_name = if raw_lower.contains("chrome") {
+            "Google Chrome"
+        } else if raw_lower.contains("msedge") {
+            "Microsoft Edge"
+        } else if raw_lower.contains("brave") {
+            "Brave Browser"
+        } else {
+            "Firefox"
+        };
+        
+        if title_lower.contains("stackoverflow") || title_lower.contains("github") || title_lower.contains("university") {
+            return format!("{} (Productive)", base_name);
+        } else if title_lower.contains("twitch") {
+            return format!("{} (Twitch)", base_name);
+        } else if title_lower.contains("youtube") {
+            if title_lower.contains("shorts") {
+                return format!("{} (YouTube Shorts)", base_name);
+            } else if title_lower.contains("ders") || title_lower.contains("eğitim") || title_lower.contains("tutorial") || title_lower.contains("software") || title_lower.contains("lecture") || title_lower.contains("üniversite") {
+                return format!("{} (YouTube Edu)", base_name);
+            } else {
+                return format!("{} (YouTube)", base_name);
+            }
+        } else {
+            return base_name.to_string();
+        }
     } else if raw_lower.contains("code") {
         return "VS Code".to_string();
-    } else if raw_lower.contains("firefox") {
-        return "Firefox".to_string();
     } else if raw_lower.contains("discord") {
         return "Discord".to_string();
     } else if raw_lower.contains("slack") {
@@ -64,8 +88,8 @@ fn normalize_app_name(raw_name: &str, title: &str) -> String {
         return "Unity".to_string();
     } else if raw_lower.contains("antigravity") {
         return "Antigravity".to_string();
-    } else if raw_lower.contains("screen-time-tracker") {
-        return "Screen Time".to_string();
+    } else if raw_lower.contains("kairos") || raw_lower.contains("screen-time-tracker") {
+        return "Kairos".to_string();
     } else if raw_lower.contains("searchhost") {
         return "Windows Search".to_string();
     } else if raw_lower.contains("windowsterminal") {
@@ -76,6 +100,8 @@ fn normalize_app_name(raw_name: &str, title: &str) -> String {
         return "IntelliJ IDEA".to_string();
     } else if raw_lower.contains("explorer") || title_lower.contains("windows gezgini") || raw_lower.contains("gezgin") {
         return "File Explorer".to_string();
+    } else if raw_lower.contains("shellhost") || raw_lower.contains("shellexperiencehost") {
+        return "Windows Shell".to_string();
     }
     
     let mut cleaned = raw_name.replace(".exe", "");
@@ -114,7 +140,6 @@ fn should_ignore_window(app_name: &str, title: &str) -> bool {
     
     let ignored_names = [
         "applicationframehost",
-        "shellexperiencehost",
         "startmenuexperiencehost",
         "lockapp",
         "textinputhost",
@@ -319,6 +344,36 @@ fn get_app_usage(app_handle: tauri::AppHandle) -> Result<Vec<AppUsage>, String> 
 }
 
 #[tauri::command]
+fn get_daily_stats(app_handle: tauri::AppHandle) -> Result<Vec<DailyStat>, String> {
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
+
+    let mut stmt = conn.prepare(
+        "SELECT strftime('%Y-%m-%d', datetime(start_time, 'unixepoch', 'localtime')) as day, 
+         SUM(end_time - start_time) as total_duration 
+         FROM sessions 
+         GROUP BY day 
+         ORDER BY day ASC 
+         LIMIT 7"
+    ).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(DailyStat {
+            day: row.get(0)?,
+            total_seconds: row.get(1)?,
+        })
+    }).map_err(|e| e.to_string())?;
+
+    let mut stats = Vec::new();
+    for row in rows {
+        if let Ok(stat) = row {
+            stats.push(stat);
+        }
+    }
+    Ok(stats)
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
@@ -327,6 +382,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .setup(|app| {
             let app_handle = app.handle().clone();
             
@@ -340,7 +396,7 @@ pub fn run() {
             let _tray = tauri::tray::TrayIconBuilder::new()
                 .icon(icon)
                 .menu(&menu)
-                .tooltip("Screen Time Tracker")
+                .tooltip("Kairos: Screen Time Tracker")
                 .on_menu_event(move |app, event| {
                     match event.id().as_ref() {
                         "show" => {
@@ -437,12 +493,12 @@ pub fn run() {
                                 let mut auto_category = "uncategorized";
                                 let name_lower = new_app_name.to_lowercase();
                                 
-                                if name_lower.contains("antigravity") || name_lower.contains("vs code") || name_lower.contains("intellij") || name_lower.contains("notion") || name_lower.contains("figma") || name_lower.contains("slack") || name_lower.contains("zoom") || name_lower.contains("teams") || name_lower.contains("cursor") || name_lower.contains("unity") || name_lower.contains("outlook") {
+                                if name_lower.contains("(productive)") || name_lower.contains("(youtube edu)") || name_lower.contains("antigravity") || name_lower.contains("vs code") || name_lower.contains("intellij") || name_lower.contains("notion") || name_lower.contains("figma") || name_lower.contains("slack") || name_lower.contains("zoom") || name_lower.contains("teams") || name_lower.contains("cursor") || name_lower.contains("unity") || name_lower.contains("outlook") {
                                     auto_category = "productive";
-                                } else if name_lower.contains("screen time") || name_lower.contains("brave") || name_lower.contains("chrome") || name_lower.contains("edge") || name_lower.contains("firefox") || name_lower.contains("explorer") || name_lower.contains("gezgin") || name_lower.contains("whatsapp") || name_lower.contains("search") || name_lower.contains("terminal") || name_lower.contains("task manager") {
-                                    auto_category = "neutral";
-                                } else if name_lower.contains("spotify") || name_lower.contains("discord") || name_lower.contains("steam") || name_lower.contains("epic") {
+                                } else if name_lower.contains("(twitch)") || name_lower.contains("(youtube)") || name_lower.contains("spotify") || name_lower.contains("discord") || name_lower.contains("steam") || name_lower.contains("epic") {
                                     auto_category = "distracting";
+                                } else if name_lower.contains("kairos") || name_lower.contains("screen time") || name_lower.contains("brave") || name_lower.contains("chrome") || name_lower.contains("edge") || name_lower.contains("firefox") || name_lower.contains("explorer") || name_lower.contains("gezgin") || name_lower.contains("whatsapp") || name_lower.contains("search") || name_lower.contains("shell") || name_lower.contains("terminal") || name_lower.contains("task manager") {
+                                    auto_category = "neutral";
                                 }
                                 
                                 let _ = conn.execute(
@@ -469,7 +525,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage])
+        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

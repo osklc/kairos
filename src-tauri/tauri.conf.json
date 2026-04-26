@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "screen-time-tracker",
+  "productName": "Kairos",
   "version": "0.1.0",
-  "identifier": "com.osman.screentimetracker",
+  "identifier": "com.osman.kairos",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,11 +10,11 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Screen Time",
+        "title": "Kairos: Screen Time Tracker",
         "width": 1000,
-        "height": 600,
+        "height": 640,
         "minWidth": 1000,
-        "minHeight": 600
+        "minHeight": 640
       }
     ],
     "security": {

@@ -10,6 +10,7 @@ let internetDateCache = null;
 
 const LANGUAGE_STORAGE_KEY = "screen-time-language";
 const THEME_STORAGE_KEY = "screen-time-theme";
+const DISABLE_PROMPT_KEY = "screen-time-disable-prompt";
 const POMO_SETTINGS_KEY = "pomodoro-settings";
 const POMO_STATS_KEY = "pomodoro-stats";
 const POMO_RING_CIRCUMFERENCE = 2 * Math.PI * 90; // ~565.48
@@ -187,6 +188,95 @@ async function fetchAndRenderAppUsage() {
   }
 }
 
+let dailyChart = null;
+let lastDailyStatsJson = "";
+
+async function fetchAndRenderDailyStats() {
+  const canvas = document.getElementById("daily-chart");
+  if (!canvas) return;
+
+  try {
+    const stats = await invoke("get_daily_stats");
+    const statsJson = JSON.stringify(stats);
+
+    // Only update if data changed or chart doesn't exist
+    if (statsJson === lastDailyStatsJson && dailyChart) {
+      return;
+    }
+    lastDailyStatsJson = statsJson;
+
+    const labels = stats.map(s => s.day);
+    const data = stats.map(s => s.total_seconds / 3600); // hours
+
+    const computedStyle = getComputedStyle(document.body);
+    const chartBgColor = computedStyle.getPropertyValue('--chart-color').trim() || 'rgba(78, 158, 229, 0.6)';
+    const chartBorderColor = computedStyle.getPropertyValue('--accent-color').trim() || 'rgba(78, 158, 229, 1)';
+
+    if (dailyChart) {
+      dailyChart.data.labels = labels;
+      dailyChart.data.datasets[0].data = data;
+      dailyChart.data.datasets[0].backgroundColor = chartBgColor;
+      dailyChart.data.datasets[0].borderColor = chartBorderColor;
+      dailyChart.update();
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    dailyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: translate("overview.totalScreenTime"),
+          data: data,
+          backgroundColor: chartBgColor,
+          borderColor: chartBorderColor,
+          borderWidth: 1,
+          borderRadius: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function (value) {
+                const hours = Math.floor(value);
+                const minutes = Math.round((value - hours) * 60);
+                const hLabel = translate("duration.hours");
+                const mLabel = translate("duration.minutes");
+                if (minutes === 0) return hours + hLabel;
+                return `${hours}${hLabel} ${minutes}${mLabel}`;
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const value = context.parsed.y;
+                const hours = Math.floor(value);
+                const minutes = Math.round((value - hours) * 60);
+                const hLabel = translate("duration.hours");
+                const mLabel = translate("duration.minutes");
+                return `${translate("overview.totalScreenTime")}: ${hours}${hLabel} ${minutes}${mLabel}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Failed to fetch daily stats:", err);
+  }
+}
+
 function renderCurrentDate(currentDateEl) {
   if (!currentDateEl || !internetDateCache) return;
   currentDateEl.textContent = formatDateForLanguage(internetDateCache, activeLanguage);
@@ -250,7 +340,9 @@ function setLanguage(languageCode, pageTitleEl, pageTitleKeys, currentDateEl) {
 }
 
 function setTheme(theme, themeButtons) {
-  const resolvedTheme = theme === "black" ? "black" : "white";
+  const themes = ["white", "black", "midnight", "nord", "cyberpunk", "rosepine", "forest"];
+  const resolvedTheme = themes.includes(theme) ? theme : "white";
+
   document.body.setAttribute("data-theme", resolvedTheme);
   localStorage.setItem(THEME_STORAGE_KEY, resolvedTheme);
 
@@ -260,6 +352,9 @@ function setTheme(theme, themeButtons) {
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-pressed", String(isActive));
   });
+
+  // Re-render chart to pick up new theme colors
+  fetchAndRenderDailyStats();
 }
 
 async function greet() {
@@ -517,6 +612,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     overview: "pages.overview",
     apps: "pages.apps",
     hourly: "pages.hourly",
+    daily: "pages.daily",
     focus: "pages.focus",
     pomodoro: "pages.pomodoro",
     goals: "pages.goals",
@@ -543,6 +639,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       fetchAndRenderAppUsage();
     } else if (pageId === "page-settings") {
       loadAppCategories();
+    } else if (pageId === "page-daily") {
+      fetchAndRenderDailyStats();
     } else if (pageId === "page-pomodoro") {
       updatePomodoroUI();
     }
@@ -594,6 +692,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         loadAppCategories();
       } else if (pageKey === "apps") {
         fetchAndRenderAppUsage();
+      } else if (pageKey === "daily") {
+        fetchAndRenderDailyStats();
       } else if (pageKey === "pomodoro") {
         loadPomodoroSettings();
         applyPomodoroSettingsToUI();
@@ -617,6 +717,15 @@ window.addEventListener("DOMContentLoaded", async () => {
       setTheme(selectedTheme, themeButtons);
     });
   });
+
+  const disablePromptToggleEl = document.querySelector("#disable-prompt-toggle");
+  if (disablePromptToggleEl) {
+    const isPromptDisabled = localStorage.getItem(DISABLE_PROMPT_KEY) === "true";
+    disablePromptToggleEl.checked = isPromptDisabled;
+    disablePromptToggleEl.addEventListener("change", (e) => {
+      localStorage.setItem(DISABLE_PROMPT_KEY, e.target.checked);
+    });
+  }
 
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
@@ -673,6 +782,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (categoryModal && modalAppName) {
     listen("ask_category", (event) => {
+      const isDisabled = localStorage.getItem(DISABLE_PROMPT_KEY) === "true";
+      if (isDisabled) return;
+
       askQueue.push(event.payload.app_name);
       processAskQueue();
     });
@@ -736,4 +848,35 @@ window.addEventListener("DOMContentLoaded", async () => {
       });
     }
   });
+
+  // ───── Autostart Init ─────
+  const autostartToggle = document.getElementById("autostart-toggle");
+  if (autostartToggle) {
+    try {
+      const { isEnabled, enable, disable } = window.__TAURI__.plugins.autostart;
+
+      // Get initial state
+      const enabled = await isEnabled();
+      autostartToggle.checked = enabled;
+
+      autostartToggle.addEventListener("change", async () => {
+        try {
+          if (autostartToggle.checked) {
+            await enable();
+          } else {
+            await disable();
+          }
+        } catch (err) {
+          console.error("Failed to change autostart state:", err);
+          // Revert toggle if failed
+          autostartToggle.checked = !autostartToggle.checked;
+        }
+      });
+    } catch (err) {
+      console.error("Autostart plugin not found or failed to initialize:", err);
+      if (autostartToggle.parentElement) {
+        autostartToggle.parentElement.style.display = "none";
+      }
+    }
+  }
 });
