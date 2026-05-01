@@ -231,7 +231,7 @@ async function fetchAndRenderDailyStats() {
       dailyChart.data.datasets[0].data = data;
       dailyChart.data.datasets[0].backgroundColor = chartBgColor;
       dailyChart.data.datasets[0].borderColor = chartBorderColor;
-      dailyChart.update();
+      dailyChart.update('none');
       return;
     }
 
@@ -250,6 +250,7 @@ async function fetchAndRenderDailyStats() {
         }]
       },
       options: {
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
         scales: {
