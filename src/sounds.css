@@ -1,0 +1,265 @@
+/* ══════════════════════════════════════════
+   Odak Sesleri — Stoic/Roman Marble Theme
+   Scoped to .sounds-app to avoid conflicts
+   ══════════════════════════════════════════ */
+
+.sounds-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 24px;
+  gap: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--s-text-primary);
+}
+
+.visualizer-container {
+  width: 100%;
+  height: 100px;
+  background: var(--s-bg-card);
+  border-radius: var(--s-radius, 12px);
+  border: 1px solid var(--s-border-subtle);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+#sound-visualizer {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Header ── */
+.sounds-app .sounds-header {
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.sounds-app .sounds-title {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: var(--s-bronze);
+  margin-bottom: 6px;
+}
+
+.sounds-app .sounds-subtitle {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--s-text-muted);
+  letter-spacing: 1px;
+}
+
+/* ── Tracks Container ── */
+.sounds-app .sounds-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ── Individual Track ── */
+.sounds-app .track {
+  background: var(--s-bg-card);
+  border: 1px solid var(--s-border-subtle);
+  border-radius: var(--s-radius);
+  padding: 16px 18px 14px;
+  transition: border-color var(--s-transition), background var(--s-transition);
+}
+
+.sounds-app .track:hover {
+  background: var(--s-bg-card-hover);
+  border-color: var(--s-bronze-dim);
+}
+
+.sounds-app .track.active {
+  border-color: var(--s-bronze);
+  background: var(--s-bg-card-hover);
+}
+
+.sounds-app .track-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sounds-app .track-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sounds-app .track-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--s-bronze-glow);
+  color: var(--s-bronze);
+  flex-shrink: 0;
+}
+
+.sounds-app .track-name {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--s-text-primary);
+}
+
+/* ── Play/Pause Toggle ── */
+/* Reset styles.css button overrides */
+.sounds-app .track-toggle {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--s-border-subtle);
+  background: transparent;
+  color: var(--s-text-secondary);
+  cursor: pointer;
+  transition: all var(--s-transition);
+  flex-shrink: 0;
+}
+
+.sounds-app .track-toggle:hover {
+  border-color: var(--s-bronze);
+  color: var(--s-bronze);
+}
+
+.sounds-app .track-toggle:active {
+  transform: scale(0.92);
+}
+
+.sounds-app .track.active .track-toggle {
+  border-color: var(--s-bronze);
+  color: var(--s-bronze);
+  background: var(--s-bronze-glow);
+}
+
+/* ── Slider Row ── */
+.sounds-app .track-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sounds-app .slider-label-min,
+.sounds-app .slider-label-max {
+  display: flex;
+  align-items: center;
+  color: var(--s-text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Custom Range Slider ── */
+/* Override global input styles from styles.css */
+#page-sounds .track-volume,
+.sounds-app .track-volume {
+  all: unset;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: var(--s-slider-track);
+  border-radius: 2px;
+  outline: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transition: background var(--s-transition);
+  box-sizing: border-box;
+}
+
+/* Webkit Thumb */
+#page-sounds .track-volume::-webkit-slider-thumb,
+.sounds-app .track-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--s-bronze-light);
+  border: none;
+  cursor: pointer;
+  transition: transform var(--s-transition), background var(--s-transition);
+}
+
+#page-sounds .track-volume::-webkit-slider-thumb:hover,
+.sounds-app .track-volume::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: var(--s-bronze);
+}
+
+#page-sounds .track-volume::-webkit-slider-thumb:active,
+.sounds-app .track-volume::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+}
+
+/* Firefox Thumb */
+#page-sounds .track-volume::-moz-range-thumb,
+.sounds-app .track-volume::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--s-bronze-light);
+  border: none;
+  cursor: pointer;
+  transition: transform var(--s-transition), background var(--s-transition);
+}
+
+#page-sounds .track-volume::-moz-range-thumb:hover,
+.sounds-app .track-volume::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background: var(--s-bronze);
+}
+
+/* Firefox Track */
+#page-sounds .track-volume::-moz-range-track,
+.sounds-app .track-volume::-moz-range-track {
+  height: 3px;
+  background: var(--s-slider-track);
+  border-radius: 2px;
+  border: none;
+}
+
+#page-sounds .track-volume::-moz-range-progress,
+.sounds-app .track-volume::-moz-range-progress {
+  height: 3px;
+  background: var(--s-bronze-dim);
+  border-radius: 2px;
+}
+
+/* ── Footer ── */
+.sounds-app .sounds-footer {
+  text-align: center;
+  padding-top: 4px;
+}
+
+.sounds-app .sounds-footer p {
+  font-size: 11px;
+  color: var(--s-text-muted);
+  letter-spacing: 0.3px;
+  font-style: italic;
+}
+
+/* ── Loading state indicator ── */
+.sounds-app .track.loading .track-toggle {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.sounds-app .track.loading .track-name::after {
+  content: ' …';
+  color: var(--s-text-muted);
+}

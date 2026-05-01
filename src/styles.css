@@ -1,32 +1,51 @@
 :root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-weight: 500;
-  --text-main: #1a2438;
-  --text-muted: #4f647c;
-  --app-bg: radial-gradient(circle at top left, #f6faf4 0%, #e8f0ee 45%, #dde6eb 100%);
-  --sidebar-bg: linear-gradient(180deg, #0f1c30 0%, #172a46 100%);
-  --sidebar-text: #e5eef8;
-  --sidebar-btn-bg: #213754;
-  --sidebar-btn-border: #385577;
-  --sidebar-btn-line: #d9e8f9;
-  --nav-hover-bg: rgba(128, 176, 224, 0.14);
-  --nav-hover-border: rgba(172, 207, 240, 0.35);
-  --nav-active-bg: rgba(78, 158, 229, 0.2);
-  --nav-active-border: rgba(128, 196, 255, 0.5);
-  --card-bg: rgba(255, 255, 255, 0.86);
-  --card-border: #ccd8e2;
-  --card-shadow: 0 10px 24px rgba(44, 70, 98, 0.08);
-  --field-bg: #f9fcff;
-  --field-border: #bfd0df;
-  --field-hover-border: #5a9ddf;
-  --field-active-bg: #edf5fc;
-  --text-on-field: #1a2438;
-  --accent-color: #4e9ee5;
-  --chart-color: rgba(78, 158, 229, 0.6);
-  --pomo-focus: #4caf50;
-  --pomo-break: #42a5f5;
+  --text-main: #1A1A1B;
+  --text-muted: #6F6F6F;
+  --app-bg: #F5F5F0;
+  --sidebar-bg: #E2E2D9;
+  --sidebar-text: #1A1A1B;
+  --sidebar-btn-bg: #E2E2D9;
+  --sidebar-btn-border: #D1D1D1;
+  --sidebar-btn-line: #1A1A1B;
+  --nav-hover-bg: rgba(140, 120, 81, 0.1);
+  --nav-hover-border: rgba(140, 120, 81, 0.2);
+  --nav-active-bg: rgba(140, 120, 81, 0.15);
+  --nav-active-border: rgba(140, 120, 81, 0.4);
+  --card-bg: #E2E2D9;
+  --card-border: #D1D1D1;
+  --card-shadow: none;
+  --field-bg: #F5F5F0;
+  --field-border: #D1D1D1;
+  --field-hover-border: #8C7851;
+  --field-active-bg: #E2E2D9;
+  --text-on-field: #1A1A1B;
+  --accent-color: #8C7851;
+  --chart-color: rgba(140, 120, 81, 0.6);
+  --pomo-focus: #8C7851;
+  --pomo-break: #8B4513;
+  --pomo-pause: #736242;
+  
+  --s-radius: 4px;
+  --s-transition: 250ms ease;
+
+  
+  /* Sound variables */
+  --s-bg-card: #E2E2D9;
+  --s-bg-card-hover: #D9D9D0;
+  --s-border-subtle: #D1D1D1;
+  --s-bronze: #8C7851;
+  --s-bronze-light: #A6926B;
+  --s-bronze-dim: #736242;
+  --s-bronze-glow: rgba(140, 120, 81, 0.15);
+  --s-text-primary: #1A1A1B;
+  --s-text-secondary: #6F6F6F;
+  --s-text-muted: #6F6F6F;
+  --s-slider-track: #D1D1D1;
+
   color: var(--text-main);
 
   font-synthesis: none;
@@ -59,6 +78,19 @@ body[data-theme="black"] {
   --text-on-field: #f0f0f0;
   --accent-color: #8a8a8a;
   --chart-color: rgba(138, 138, 138, 0.6);
+  /* Sound variables */
+  --s-bg-card: rgba(30, 30, 30, 0.9);
+  --s-bg-card-hover: rgba(45, 45, 45, 0.95);
+  --s-border-subtle: #3b3b3b;
+  --s-bronze: #8a8a8a;
+  --s-bronze-light: #b0b0b0;
+  --s-bronze-dim: #555555;
+  --s-bronze-glow: rgba(138, 138, 138, 0.15);
+  --s-text-primary: #edf2f8;
+  --s-text-secondary: #b6c1ce;
+  --s-text-muted: #6b6863;
+  --s-slider-track: #3b3b3b;
+
 }
 
 body[data-theme="midnight"] {
@@ -70,22 +102,35 @@ body[data-theme="midnight"] {
   --sidebar-btn-bg: #1e293b;
   --sidebar-btn-border: #334155;
   --sidebar-btn-line: #f8fafc;
-  --nav-hover-bg: rgba(56, 189, 248, 0.1);
-  --nav-hover-border: rgba(56, 189, 248, 0.2);
-  --nav-active-bg: rgba(56, 189, 248, 0.2);
-  --nav-active-border: rgba(56, 189, 248, 0.4);
+  --nav-hover-bg: rgba(142, 118, 75, 0.12);
+  --nav-hover-border: rgba(142, 118, 75, 0.25);
+  --nav-active-bg: rgba(142, 118, 75, 0.2);
+  --nav-active-border: rgba(142, 118, 75, 0.45);
   --card-bg: rgba(30, 41, 59, 0.8);
   --card-border: #334155;
   --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   --field-bg: #0f172a;
   --field-border: #334155;
-  --field-hover-border: #38bdf8;
+  --field-hover-border: #8E764B;
   --field-active-bg: #1e293b;
   --text-on-field: #f8fafc;
-  --accent-color: #38bdf8;
-  --chart-color: rgba(56, 189, 248, 0.6);
+  --accent-color: #8E764B;
+  --chart-color: rgba(142, 118, 75, 0.65);
+  /* Sound variables */
+  --s-bg-card: rgba(30, 41, 59, 0.8);
+  --s-bg-card-hover: rgba(45, 55, 75, 0.9);
+  --s-border-subtle: #334155;
+  --s-bronze: #8E764B;
+  --s-bronze-light: #A68A4B;
+  --s-bronze-dim: #736242;
+  --s-bronze-glow: rgba(142, 118, 75, 0.18);
+  --s-text-primary: #e2e8f0;
+  --s-text-secondary: #94a3b8;
+  --s-text-muted: #64748b;
+  --s-slider-track: #334155;
+
   --pomo-focus: #10b981;
-  --pomo-break: #38bdf8;
+  --pomo-break: #8E764B;
 }
 
 body[data-theme="nord"] {
@@ -111,6 +156,19 @@ body[data-theme="nord"] {
   --text-on-field: #eceff4;
   --accent-color: #88c0d0;
   --chart-color: rgba(136, 192, 208, 0.6);
+  /* Sound variables */
+  --s-bg-card: #3b4252;
+  --s-bg-card-hover: #434c5e;
+  --s-border-subtle: #4c566a;
+  --s-bronze: #88c0d0;
+  --s-bronze-light: #8fbcbb;
+  --s-bronze-dim: #5e81ac;
+  --s-bronze-glow: rgba(136, 192, 208, 0.15);
+  --s-text-primary: #eceff4;
+  --s-text-secondary: #d8dee9;
+  --s-text-muted: #4c566a;
+  --s-slider-track: #4c566a;
+
   --pomo-focus: #a3be8c;
   --pomo-break: #81a1c1;
 }
@@ -138,6 +196,19 @@ body[data-theme="cyberpunk"] {
   --text-on-field: #00ffea;
   --accent-color: #00ffea;
   --chart-color: rgba(0, 255, 234, 0.7);
+  /* Sound variables */
+  --s-bg-card: rgba(13, 2, 33, 0.9);
+  --s-bg-card-hover: rgba(36, 11, 54, 0.95);
+  --s-border-subtle: #ff00ff;
+  --s-bronze: #00ffea;
+  --s-bronze-light: #5ffff3;
+  --s-bronze-dim: #009b8f;
+  --s-bronze-glow: rgba(0, 255, 234, 0.15);
+  --s-text-primary: #00ffea;
+  --s-text-secondary: #ff00ff;
+  --s-text-muted: #ff00ff;
+  --s-slider-track: #ff00ff;
+
   --pomo-focus: #39ff14;
   --pomo-break: #ff00ff;
 }
@@ -165,6 +236,19 @@ body[data-theme="rosepine"] {
   --text-on-field: #e0def4;
   --accent-color: #ebbcba;
   --chart-color: rgba(235, 188, 186, 0.6);
+  /* Sound variables */
+  --s-bg-card: #1f1d2e;
+  --s-bg-card-hover: #26233a;
+  --s-border-subtle: #403d52;
+  --s-bronze: #ebbcba;
+  --s-bronze-light: #f6c177;
+  --s-bronze-dim: #908caa;
+  --s-bronze-glow: rgba(235, 188, 186, 0.15);
+  --s-text-primary: #e0def4;
+  --s-text-secondary: #908caa;
+  --s-text-muted: #6e6a86;
+  --s-slider-track: #403d52;
+
   --pomo-focus: #eb6f92;
   --pomo-break: #9ccfd8;
 }
@@ -192,12 +276,33 @@ body[data-theme="forest"] {
   --text-on-field: #f0fdf4;
   --accent-color: #10b981;
   --chart-color: rgba(16, 185, 129, 0.6);
+  /* Sound variables */
+  --s-bg-card: rgba(6, 78, 59, 0.85);
+  --s-bg-card-hover: rgba(6, 95, 70, 0.9);
+  --s-border-subtle: #065f46;
+  --s-bronze: #10b981;
+  --s-bronze-light: #34d399;
+  --s-bronze-dim: #059669;
+  --s-bronze-glow: rgba(16, 185, 129, 0.15);
+  --s-text-primary: #f0fdf4;
+  --s-text-secondary: #86efac;
+  --s-text-muted: #065f46;
+  --s-slider-track: #065f46;
+
   --pomo-focus: #86efac;
   --pomo-break: #34d399;
 }
 
 * {
   box-sizing: border-box;
+}
+
+h1, h2 {
+  font-family: 'Cinzel', serif;
+}
+
+h3, .stat-value, .pomo-stat-value, .pomo-time-display, .app-usage-list, table, .card p, #stat-total-time, #stat-productive-time, #stat-distracting-time {
+  font-family: 'Inter', sans-serif;
 }
 
 body {
@@ -241,7 +346,7 @@ body {
 .sidebar-toggle {
   border: 1px solid var(--sidebar-btn-border);
   background: var(--sidebar-btn-bg);
-  border-radius: 10px;
+  border-radius: var(--s-radius);
   width: 44px;
   height: 44px;
   display: flex;
@@ -261,8 +366,10 @@ body {
 
 .brand {
   margin: 0;
-  font-size: 1.25rem;
+  font-family: 'Cinzel', serif;
+  font-size: 1.4rem;
   font-weight: 700;
+  letter-spacing: 2px;
 }
 
 .side-nav {
@@ -275,7 +382,7 @@ body {
 .nav-group-trigger {
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--s-radius);
   background: transparent;
   color: inherit;
   display: flex;
@@ -358,7 +465,10 @@ body {
 
 .topbar h2 {
   margin: 0;
-  font-size: 1.7rem;
+  font-family: 'Cinzel', serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .topbar p {
@@ -383,7 +493,7 @@ body {
 .card,
 .panel {
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: var(--s-radius);
   background: var(--card-bg);
   padding: 18px;
   box-shadow: var(--card-shadow);
@@ -418,7 +528,7 @@ body {
 
 input,
 button {
-  border-radius: 10px;
+  border-radius: var(--s-radius);
   border: 1px solid var(--field-border);
   padding: 0.65em 1em;
   font-size: 1rem;
@@ -483,7 +593,7 @@ button:active {
 }
 
 select {
-  border-radius: 10px;
+  border-radius: var(--s-radius);
   border: 1px solid var(--field-border);
   padding: 0.65em 1em;
   font-size: 1rem;
@@ -521,7 +631,7 @@ button {
   max-height: 300px;
   overflow-y: auto;
   border: 1px solid var(--field-border);
-  border-radius: 10px;
+  border-radius: var(--s-radius);
   padding: 10px;
   background: var(--field-bg);
 }
@@ -565,7 +675,7 @@ button {
 .modal-content {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: var(--s-radius);
   padding: 24px;
   width: 90%;
   max-width: 400px;
@@ -587,7 +697,7 @@ button {
 
 .modal-buttons button {
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--s-radius);
   border: 1px solid var(--field-border);
   background: var(--field-bg);
   color: var(--text-main);
@@ -697,7 +807,7 @@ button {
 
 .pomo-btn {
   padding: 10px 28px;
-  border-radius: 12px;
+  border-radius: var(--s-radius);
   font-weight: 600;
   font-size: 0.95rem;
   border: 1px solid var(--field-border);
@@ -708,23 +818,25 @@ button {
 }
 
 .pomo-btn-start {
-  background: #4caf50;
+  background: var(--pomo-focus);
   color: #fff;
-  border-color: #43a047;
+  border-color: var(--pomo-focus);
+  opacity: 0.9;
 }
 
 .pomo-btn-start:hover {
-  background: #43a047;
+  opacity: 1;
 }
 
 .pomo-btn-pause {
-  background: #ff9800;
+  background: var(--pomo-pause);
   color: #fff;
-  border-color: #f57c00;
+  border-color: var(--pomo-pause);
+  opacity: 0.9;
 }
 
 .pomo-btn-pause:hover {
-  background: #f57c00;
+  opacity: 1;
 }
 
 .pomo-btn-reset:hover {
@@ -797,7 +909,7 @@ button {
   width: 70px;
   text-align: center;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: var(--s-radius);
   border: 1px solid var(--field-border);
   background: var(--field-bg);
   color: var(--text-on-field);

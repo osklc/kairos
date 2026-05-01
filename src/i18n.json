@@ -54,7 +54,7 @@
       "settings.langEnglish": "English",
       "settings.langTurkish": "Turkish",
       "settings.theme": "Theme",
-      "settings.themeWhite": "White",
+      "settings.themeWhite": "Hegemon Classic",
       "settings.themeBlack": "Black",
       "settings.themeMidnight": "Midnight",
       "settings.themeNord": "Nord",
@@ -96,7 +96,11 @@
       "pomodoro.longBreakDuration": "Long Break (min)",
       "pomodoro.longBreakAfter": "Long Break After (sessions)",
       "pomodoro.todayStats": "Today's Stats",
-      "pomodoro.settings": "Timer Settings"
+      "pomodoro.settings": "Timer Settings",
+      "nav.sounds": "Focus Sounds",
+      "sounds.title": "FOCUS SOUNDS",
+      "sounds.subtitle": "Focus your mind, dive into silence",
+      "sounds.footer": "Close the window — audio continues in the background"
     },
     "tr": {
       "brand.title": "Kairos",
@@ -151,7 +155,7 @@
       "settings.langEnglish": "İngilizce",
       "settings.langTurkish": "Türkçe",
       "settings.theme": "Tema",
-      "settings.themeWhite": "Beyaz",
+      "settings.themeWhite": "Hegemon Classic",
       "settings.themeBlack": "Siyah",
       "settings.themeMidnight": "Gece Yarısı",
       "settings.themeNord": "Nord (Kuzey)",
@@ -193,7 +197,11 @@
       "pomodoro.longBreakDuration": "Uzun Mola (dk)",
       "pomodoro.longBreakAfter": "Uzun Mola Sonrası (oturum)",
       "pomodoro.todayStats": "Bugünün İstatistikleri",
-      "pomodoro.settings": "Zamanlayıcı Ayarları"
+      "pomodoro.settings": "Zamanlayıcı Ayarları",
+      "nav.sounds": "Odak Sesleri",
+      "sounds.title": "ODAK SESLERİ",
+      "sounds.subtitle": "Zihnini odakla, sessizliğe dal",
+      "sounds.footer": "Pencereyi kapat — ses arka planda çalmaya devam eder"
     }
   }
 }

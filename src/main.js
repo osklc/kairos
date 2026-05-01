@@ -19,6 +19,18 @@ const INTERNET_TIME_ENDPOINTS = [
   "https://timeapi.io/api/Time/current/zone?timeZone=UTC",
 ];
 
+const FADE_DURATION = 1000;
+const SOUND_FILES = {
+  pluvia: "pluvia.mp3",
+  silva: "silva.mp3",
+  "focus-static": "focus-static.mp3",
+};
+const soundTracks = {};
+let soundSaveTimer = null;
+let globalAnalyser = null;
+let globalAudioCtx = null;
+let visualizerAnimationId = null;
+
 function translate(key) {
   return activeDictionary[key] ?? key;
 }
@@ -768,6 +780,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+
   const categoryModal = document.getElementById("category-modal");
   const modalAppName = document.getElementById("modal-app-name");
   let currentAskApp = "";
@@ -817,6 +830,60 @@ window.addEventListener("DOMContentLoaded", async () => {
         processAskQueue();
       });
     }
+  }
+
+
+  // ───── Focus Sounds Init ─────
+  const soundsPage = document.getElementById("page-sounds");
+  const trackEls = soundsPage ? soundsPage.querySelectorAll(".track[data-sound]") : [];
+  const savedSoundSettings = await loadSoundSettings();
+
+  for (const trackEl of trackEls) {
+    const soundKey = trackEl.dataset.sound;
+    if (!soundKey || !SOUND_FILES[soundKey]) continue;
+
+    const savedVolume = savedSoundSettings[soundKey]?.volume ?? 50;
+    const savedPlaying = savedSoundSettings[soundKey]?.playing ?? false;
+
+    soundTracks[soundKey] = {
+      audio: null,
+      ctx: null,
+      gainNode: null,
+      sourceNode: null,
+      playing: false,
+      volume: savedVolume,
+      blobUrl: null,
+      loaded: false,
+      el: trackEl,
+    };
+
+    const slider = trackEl.querySelector(".track-volume");
+    if (slider) {
+      slider.value = savedVolume;
+      updateSoundSliderFill(slider);
+    }
+
+    const toggleBtn = trackEl.querySelector(".track-toggle");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => toggleSoundTrack(soundKey));
+    }
+
+    if (slider) {
+      slider.addEventListener("input", (e) => {
+        const vol = parseInt(e.target.value, 10);
+        setSoundVolume(soundKey, vol);
+        updateSoundSliderFill(e.target);
+        scheduleSoundSave();
+      });
+    }
+
+    trackEl.classList.add("loading");
+    loadSoundAudioFile(soundKey).then(() => {
+      trackEl.classList.remove("loading");
+      if (savedPlaying) {
+        fadeInSound(soundKey);
+      }
+    });
   }
 
   // ───── Pomodoro Init ─────
@@ -882,3 +949,223 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
+
+// ── Focus Sounds Audio Engine ──
+
+async function loadSoundAudioFile(soundKey) {
+  try {
+    const bytes = await invoke("get_audio_file", { filename: SOUND_FILES[soundKey] });
+    const uint8 = new Uint8Array(bytes);
+    const blob = new Blob([uint8], { type: "audio/mpeg" });
+    const url = URL.createObjectURL(blob);
+    soundTracks[soundKey].blobUrl = url;
+    soundTracks[soundKey].loaded = true;
+  } catch (err) {
+    console.error(`Failed to load ${soundKey}:`, err);
+  }
+}
+
+function toggleSoundTrack(soundKey) {
+  const track = soundTracks[soundKey];
+  if (!track || !track.loaded) return;
+
+  if (track.playing) {
+    fadeOutSound(soundKey);
+  } else {
+    fadeInSound(soundKey);
+  }
+}
+
+function fadeInSound(soundKey) {
+  const track = soundTracks[soundKey];
+
+  if (!globalAudioCtx) {
+    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if (!track.ctx) {
+    track.ctx = globalAudioCtx;
+
+    // Initialize global analyser if not exists
+    if (!globalAnalyser) {
+      globalAnalyser = globalAudioCtx.createAnalyser();
+      globalAnalyser.fftSize = 256;
+      globalAnalyser.connect(globalAudioCtx.destination);
+    }
+  }
+
+  if (!track.audio) {
+    track.audio = new Audio(track.blobUrl);
+    track.audio.loop = true;
+    track.audio.crossOrigin = "anonymous";
+
+    track.sourceNode = track.ctx.createMediaElementSource(track.audio);
+    track.gainNode = track.ctx.createGain();
+
+    // Connect chain: Source -> Gain -> Analyser
+    track.sourceNode.connect(track.gainNode);
+    track.gainNode.connect(globalAnalyser);
+  }
+
+  if (track.ctx.state === "suspended") {
+    track.ctx.resume();
+  }
+
+  const targetGain = track.volume / 100;
+  track.gainNode.gain.setValueAtTime(0, track.ctx.currentTime);
+  track.gainNode.gain.linearRampToValueAtTime(targetGain, track.ctx.currentTime + FADE_DURATION / 1000);
+
+  track.audio.play().catch(err => console.error("Play error:", err));
+  track.playing = true;
+  updateSoundTrackUI(soundKey);
+  scheduleSoundSave();
+  startVisualizer();
+}
+
+function fadeOutSound(soundKey) {
+  const track = soundTracks[soundKey];
+  if (!track.audio || !track.gainNode) return;
+
+  const now = track.ctx.currentTime;
+  track.gainNode.gain.setValueAtTime(track.gainNode.gain.value, now);
+  track.gainNode.gain.linearRampToValueAtTime(0, now + FADE_DURATION / 1000);
+
+  setTimeout(() => {
+    track.audio.pause();
+    track.playing = false;
+    updateSoundTrackUI(soundKey);
+    scheduleSoundSave();
+  }, FADE_DURATION);
+}
+
+function setSoundVolume(soundKey, vol) {
+  const track = soundTracks[soundKey];
+  track.volume = vol;
+
+  if (track.gainNode && track.playing) {
+    const now = track.ctx.currentTime;
+    track.gainNode.gain.setValueAtTime(track.gainNode.gain.value, now);
+    track.gainNode.gain.linearRampToValueAtTime(vol / 100, now + 0.1);
+  }
+}
+
+function updateSoundTrackUI(soundKey) {
+  const track = soundTracks[soundKey];
+  const el = track.el;
+  if (!el) return;
+
+  const playIcon = el.querySelector(".icon-play");
+  const pauseIcon = el.querySelector(".icon-pause");
+
+  if (track.playing) {
+    el.classList.add("active");
+    if (playIcon) playIcon.style.display = "none";
+    if (pauseIcon) pauseIcon.style.display = "block";
+  } else {
+    el.classList.remove("active");
+    if (playIcon) playIcon.style.display = "block";
+    if (pauseIcon) pauseIcon.style.display = "none";
+  }
+}
+
+function updateSoundSliderFill(slider) {
+  const min = parseFloat(slider.min) || 0;
+  const max = parseFloat(slider.max) || 100;
+  const val = parseFloat(slider.value) || 0;
+  const pct = ((val - min) / (max - min)) * 100;
+  slider.style.background = `linear-gradient(to right, var(--s-bronze-dim) 0%, var(--s-bronze) ${pct}%, var(--s-slider-track) ${pct}%, var(--s-slider-track) 100%)`;
+}
+
+async function loadSoundSettings() {
+  try {
+    const raw = await invoke("get_setting", { key: "sounds_state" });
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("Failed to load sounds settings:", err);
+  }
+  return {};
+}
+
+function scheduleSoundSave() {
+  clearTimeout(soundSaveTimer);
+  soundSaveTimer = setTimeout(() => saveSoundSettings(), 500);
+}
+
+async function saveSoundSettings() {
+  const state = {};
+  for (const [key, track] of Object.entries(soundTracks)) {
+    state[key] = {
+      volume: track.volume,
+      playing: track.playing,
+    };
+  }
+
+  try {
+    await invoke("set_setting", {
+      key: "sounds_state",
+      value: JSON.stringify(state),
+    });
+  } catch (err) {
+    console.error("Failed to save sounds settings:", err);
+  }
+}
+
+// ── Visualizer ──
+
+function startVisualizer() {
+  if (visualizerAnimationId) return;
+
+  const canvas = document.getElementById("sound-visualizer");
+  if (!canvas || !globalAnalyser) return;
+
+  const ctx = canvas.getContext("2d");
+  const bufferLength = globalAnalyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  // Set canvas size
+  const resize = () => {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  };
+  window.addEventListener("resize", resize);
+  resize();
+
+  const draw = () => {
+    visualizerAnimationId = requestAnimationFrame(draw);
+    globalAnalyser.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let barHeight;
+    let x = 0;
+
+    const computedStyle = getComputedStyle(document.body);
+    const accentColor = computedStyle.getPropertyValue("--s-bronze").trim() || "#b5966d";
+
+    for (let i = 0; i < bufferLength; i++) {
+      barHeight = (dataArray[i] / 255) * canvas.height;
+
+      ctx.fillStyle = accentColor;
+      // Draw centered bars
+      ctx.fillRect(x, (canvas.height - barHeight) / 2, barWidth - 1, barHeight);
+
+      x += barWidth;
+    }
+
+    // Stop if no sound is playing
+    const anyPlaying = Object.values(soundTracks).some(t => t.playing);
+    if (!anyPlaying) {
+      const allSilent = dataArray.every(v => v === 0);
+      if (allSilent) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  };
+
+  draw();
+}

@@ -231,6 +231,14 @@ fn init_db(app_handle: &tauri::AppHandle) -> SqlResult<Connection> {
     let _ = conn.execute("ALTER TABLE sessions ADD COLUMN category_override TEXT", []);
     let _ = conn.execute("ALTER TABLE sessions ADD COLUMN needs_review BOOLEAN DEFAULT 0", []);
     let _ = conn.execute("ALTER TABLE sessions ADD COLUMN window_title TEXT", []);
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )",
+        [],
+    )?;
     
     Ok(conn)
 }
@@ -421,6 +429,7 @@ fn get_app_usage(app_handle: tauri::AppHandle) -> Result<Vec<AppUsage>, String> 
          FROM sessions 
          WHERE end_time >= ?1 
          GROUP BY app_name 
+         HAVING duration >= 60
          ORDER BY duration DESC"
     ).map_err(|e| e.to_string())?;
 
@@ -474,6 +483,66 @@ fn get_daily_stats(app_handle: tauri::AppHandle) -> Result<Vec<DailyStat>, Strin
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+#[tauri::command]
+fn get_setting(app_handle: tauri::AppHandle, key: String) -> Result<Option<String>, String> {
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
+    let result: Option<String> = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            params![key],
+            |row| row.get(0),
+        )
+        .ok();
+    Ok(result)
+}
+
+#[tauri::command]
+fn set_setting(app_handle: tauri::AppHandle, key: String, value: String) -> Result<(), String> {
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES (?1, ?2)",
+        params![key, value],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn get_audio_file(app_handle: tauri::AppHandle, filename: String) -> Result<Vec<u8>, String> {
+    use std::path::PathBuf;
+
+    // Sanitize filename to prevent path traversal
+    let safe_name = PathBuf::from(&filename)
+        .file_name()
+        .ok_or("Invalid filename")?
+        .to_string_lossy()
+        .to_string();
+
+    // 1. Try resource dir (production bundle)
+    if let Ok(resource_dir) = app_handle.path().resource_dir() {
+        let p = resource_dir.join("assets").join("sounds").join(&safe_name);
+        if p.exists() {
+            return fs::read(&p).map_err(|e| e.to_string());
+        }
+        // Some Tauri versions flatten resources — try directly under resource_dir
+        let p2 = resource_dir.join(&safe_name);
+        if p2.exists() {
+            return fs::read(&p2).map_err(|e| e.to_string());
+        }
+    }
+
+    // 2. Dev mode: look relative to the crate's source directory
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let dev_path = manifest_dir.join("assets").join("sounds").join(&safe_name);
+    if dev_path.exists() {
+        return fs::read(&dev_path).map_err(|e| e.to_string());
+    }
+
+    Err(format!("Audio file not found: {}", safe_name))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -652,7 +721,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_pending_reviews, resolve_review])
+        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
