@@ -82,12 +82,7 @@
               </svg>
               <span class="label" data-i18n="nav.appUsage">App Usage</span>
             </button>
-            <button class="nav-link" type="button" data-page="hourly">
-              <svg class="icon" aria-hidden="true" focusable="false">
-                <use href="/assets/sidebar-icons.svg#icon-hourly"></use>
-              </svg>
-              <span class="label" data-i18n="nav.hourlyTrend">Hourly Trend</span>
-            </button>
+
             <button class="nav-link" type="button" data-page="daily">
               <svg class="icon" aria-hidden="true" focusable="false">
                 <use href="/assets/sidebar-icons.svg#icon-analytics"></use>
@@ -100,12 +95,7 @@
               </svg>
               <span class="label" data-i18n="nav.energy">Electricity Usage</span>
             </button>
-            <button class="nav-link" type="button" data-page="focus">
-              <svg class="icon" aria-hidden="true" focusable="false">
-                <use href="/assets/sidebar-icons.svg#icon-focus"></use>
-              </svg>
-              <span class="label" data-i18n="nav.focusSessions">Focus Sessions</span>
-            </button>
+
           </div>
         </div>
 
@@ -123,11 +113,11 @@
           <span class="label" data-i18n="nav.sounds">Focus Sounds</span>
         </button>
 
-        <button class="nav-link" type="button" data-page="goals">
+        <button class="nav-link" type="button" data-page="todo">
           <svg class="icon" aria-hidden="true" focusable="false">
             <use href="/assets/sidebar-icons.svg#icon-goals"></use>
           </svg>
-          <span class="label" data-i18n="nav.goals">Goals</span>
+          <span class="label" data-i18n="nav.todo">To-Do List</span>
         </button>
 
         <button class="nav-link" type="button" data-page="settings">
@@ -286,25 +276,9 @@
         </article>
       </section>
 
-      <section class="page" id="page-hourly" aria-label="Hourly trend page">
-        <article class="panel">
-          <h3 data-i18n="hourly.title">Hourly Activity Trend</h3>
-          <p data-i18n="hourly.item1">08:00 - 12:00: High focus</p>
-          <p data-i18n="hourly.item2">12:00 - 14:00: Breaks and meetings</p>
-          <p data-i18n="hourly.item3">14:00 - 18:00: Moderate productivity</p>
-        </article>
-      </section>
 
-      <section class="page" id="page-focus" aria-label="Focus session page">
-        <article class="panel">
-          <h3 data-i18n="focus.title">Focus Sessions</h3>
-          <ol>
-            <li data-i18n="focus.item1">09:00 - 10:20 Deep Work</li>
-            <li data-i18n="focus.item2">11:00 - 12:10 Coding Sprint</li>
-            <li data-i18n="focus.item3">15:00 - 16:15 Bug Fixing</li>
-          </ol>
-        </article>
-      </section>
+
+
 
       <section class="page" id="page-pomodoro" aria-label="Pomodoro timer page">
         <article class="panel pomodoro-container">
@@ -510,13 +484,15 @@
         </div>
       </section>
 
-      <section class="page" id="page-goals" aria-label="Goals page">
-        <article class="panel">
-          <h3 data-i18n="goals.title">Daily Goals</h3>
-          <ul>
-            <li data-i18n="goals.item1">Keep social media use under 30 minutes</li>
-            <li data-i18n="goals.item2">Take a 5-minute break every hour</li>
-            <li data-i18n="goals.item3">Keep productive time above 4 hours</li>
+      <section class="page" id="page-todo" aria-label="To-Do List page">
+        <article class="panel todo-panel">
+          <h3 data-i18n="todo.title">To-Do List</h3>
+          <form class="row" id="todo-form">
+            <input id="todo-input" placeholder="Add a new task..." data-i18n-placeholder="todo.placeholder" />
+            <button type="submit" data-i18n="todo.add">Add</button>
+          </form>
+          <ul id="todo-list" class="todo-list">
+            <!-- To-do items will be injected here -->
           </ul>
         </article>
       </section>

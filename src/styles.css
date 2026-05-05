@@ -1117,6 +1117,77 @@ button {
   font-size: 0.9rem;
 }
 
+.todo-panel {
+  text-align: left;
+}
+
+/* To-Do List Styling */
+.todo-list {
+  list-style: none;
+  padding: 0 !important;
+  margin: 48px 0 0 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--s-radius);
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.todo-item:hover {
+  border-color: var(--field-hover-border);
+}
+
+.todo-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-color);
+  flex: none;
+  margin: 0;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  transition: color 0.2s, text-decoration 0.2s;
+  text-align: left;
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.todo-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.todo-delete-btn:hover {
+  color: #ff4757;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;

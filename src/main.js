@@ -1173,13 +1173,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   const pageTitleKeys = {
     overview: "pages.overview",
     apps: "pages.apps",
-    hourly: "pages.hourly",
     daily: "pages.daily",
     energy: "pages.energy",
-    focus: "pages.focus",
     pomodoro: "pages.pomodoro",
     sounds: "pages.sounds",
-    goals: "pages.goals",
+    todo: "pages.todo",
     settings: "pages.settings",
   };
 
@@ -1306,6 +1304,80 @@ window.addEventListener("DOMContentLoaded", async () => {
     greetForm.addEventListener("submit", (e) => {
       e.preventDefault();
       greet();
+    });
+  }
+
+  // ───── To-Do List Init ─────
+  const todoForm = document.getElementById("todo-form");
+  const todoInput = document.getElementById("todo-input");
+  const todoList = document.getElementById("todo-list");
+
+  let todos = [];
+  try {
+    const savedTodos = localStorage.getItem("todos");
+    if (savedTodos) {
+      todos = JSON.parse(savedTodos);
+    }
+  } catch (e) {
+    console.error("Failed to load todos", e);
+  }
+
+  function renderTodos() {
+    if (!todoList) return;
+    todoList.innerHTML = "";
+    todos.forEach((todo, index) => {
+      const li = document.createElement("li");
+      li.className = "todo-item" + (todo.completed ? " completed" : "");
+      
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = todo.completed;
+      checkbox.addEventListener("change", () => {
+        todos[index].completed = checkbox.checked;
+        if (checkbox.checked) {
+          const audio = new Audio("/assets/sound-effect/mixkit-quick-win-video-game-notification-269.wav");
+          audio.volume = 0.5;
+          audio.play().catch(e => console.error("Sound play failed:", e));
+        }
+        saveTodos();
+        renderTodos();
+      });
+
+      const span = document.createElement("span");
+      span.textContent = todo.text;
+      span.className = "todo-text";
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "×";
+      deleteBtn.className = "todo-delete-btn";
+      deleteBtn.addEventListener("click", () => {
+        todos.splice(index, 1);
+        saveTodos();
+        renderTodos();
+      });
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      li.appendChild(deleteBtn);
+      todoList.appendChild(li);
+    });
+  }
+
+  function saveTodos() {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }
+
+  if (todoForm && todoInput && todoList) {
+    renderTodos();
+    todoForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = todoInput.value.trim();
+      if (text) {
+        todos.push({ text, completed: false });
+        todoInput.value = "";
+        saveTodos();
+        renderTodos();
+      }
     });
   }
 

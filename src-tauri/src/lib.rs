@@ -109,41 +109,222 @@ fn detect_amd_gpu() -> Option<String> {
     
     #[derive(Deserialize, Debug, Clone)]
     #[serde(rename_all = "PascalCase")]
+    #[allow(dead_code)]
     struct VideoController {
         name: String,
+        adapter_compatibility: Option<String>,
     }
 
-    // Wrap entire function in try-catch equivalent using Result chain
     let result = (|| -> Result<Option<String>, Box<dyn std::error::Error>> {
         let com_lib = COMLibrary::new()?;
         let wmi_conn = WMIConnection::new(com_lib)?;
 
-        // Query all video controllers
+        // Query video controllers with compatibility info to distinguish discrete vs integrated
         let results: Vec<VideoController> = wmi_conn
-            .raw_query("SELECT Name FROM Win32_VideoController")?;
+            .raw_query("SELECT Name, AdapterCompatibility FROM Win32_VideoController")?;
 
-        for result in results {
+        // First pass: prefer discrete AMD/Radeon GPUs (filter out integrated)
+        let mut fallback: Option<String> = None;
+        for result in &results {
             let name = result.name.trim();
-            // Check for AMD, Radeon, or ATI GPUs (exclude Microsoft, Virtual adapters)
-            if !name.is_empty() 
-                && (name.contains("AMD") || name.contains("Radeon") || name.contains("ATI"))
-                && !name.contains("Microsoft")
-                && !name.contains("Virtual")
-            {
-                return Ok(Some(name.to_string()));
+            if name.is_empty() || name.contains("Microsoft") || name.contains("Virtual") {
+                continue;
+            }
+            if name.contains("AMD") || name.contains("Radeon") || name.contains("ATI") {
+                // Prefer discrete: names containing "RX", "Vega", "VII", "XT" are typically discrete
+                let is_discrete = name.contains("RX") || name.contains("Vega") 
+                    || name.contains("VII") || name.contains("XT") || name.contains("PRO");
+                if is_discrete {
+                    return Ok(Some(name.to_string()));
+                }
+                if fallback.is_none() {
+                    fallback = Some(name.to_string());
+                }
             }
         }
 
-        Ok(None)
+        Ok(fallback)
     })();
 
     result.ok().flatten()
+}
+
+/// Read AMD GPU power via AMD Display Library (atiadlxx.dll).
+/// This is the most accurate method — same source as Radeon Software.
+#[cfg(target_os = "windows")]
+#[allow(dead_code)]
+fn read_amd_gpu_power_adl() -> Option<f64> {
+    use libloading::Library;
+    use std::ffi::c_void;
+
+    // ADLPMLogDataOutput: iVersion(4) + ulActiveSampleRate(4) + ulLastUpdated(8)
+    // + ulValues[256][2] (256 sensors × 2 u32s = 2048 bytes) + ulNumValidSamples(4)
+    // Total = 2068 bytes
+    const MAX_SENSORS: usize = 256;
+
+    #[repr(C)]
+    struct ADLPMLogDataOutput {
+        i_version:            i32,
+        ul_active_sample_rate: u32,
+        ul_last_updated:      i64,
+        ul_values:            [[u32; 2]; MAX_SENSORS], // [value, supported]
+        ul_num_valid_samples: u32,
+    }
+
+    // Known sensor indices from AMD ADL SDK (RDNA2)
+    // We scan candidates because the index can vary slightly across driver versions
+    const POWER_SENSOR_CANDIDATES: &[usize] = &[
+        16, // ADL_PMLOG_GFX_POWER (most common)
+        26, // ADL_PMLOG_SOC_POWER
+        31, // ADL_PMLOG_TOTAL_BOARD_POWER
+    ];
+
+    // Valid GPU power range (W) — used to verify we read the right sensor
+    const MIN_PLAUSIBLE_W: f64 = 5.0;
+    const MAX_PLAUSIBLE_W: f64 = 600.0;
+
+    unsafe {
+        let lib = Library::new("atiadlxx.dll").ok()?;
+
+        // ADL2_Main_Control_Create(malloc_cb, enum_connected, *context) -> int
+        type CreateFn = unsafe extern "C" fn(*const c_void, i32, *mut *mut c_void) -> i32;
+        // ADL2_Adapter_NumberOfAdapters_Get(context, *count) -> int
+        type AdapterCountFn = unsafe extern "C" fn(*mut c_void, *mut i32) -> i32;
+        // ADL2_New_QueryPMLogData_Get(context, adapter_idx, *output) -> int
+        type PMLogGetFn = unsafe extern "C" fn(*mut c_void, i32, *mut ADLPMLogDataOutput) -> i32;
+        // ADL2_Main_Control_Destroy(context) -> int
+        type DestroyFn = unsafe extern "C" fn(*mut c_void) -> i32;
+
+        let create: libloading::Symbol<CreateFn> = lib.get(b"ADL2_Main_Control_Create").ok()?;
+        let adapter_count_fn: libloading::Symbol<AdapterCountFn> = lib.get(b"ADL2_Adapter_NumberOfAdapters_Get").ok()?;
+        let pmlog_get: libloading::Symbol<PMLogGetFn> = lib.get(b"ADL2_New_QueryPMLogData_Get").ok()?;
+        let destroy: libloading::Symbol<DestroyFn> = lib.get(b"ADL2_Main_Control_Destroy").ok()?;
+
+        let mut context: *mut c_void = std::ptr::null_mut();
+        // Pass null malloc callback — ADL uses its internal allocator
+        if create(std::ptr::null(), 1, &mut context) != 0 {
+            return None;
+        }
+
+        let mut adapter_count = 0i32;
+        if adapter_count_fn(context, &mut adapter_count) != 0 || adapter_count == 0 {
+            destroy(context);
+            return None;
+        }
+
+        let mut total_power = 0.0f64;
+        let mut found = false;
+
+        for idx in 0..adapter_count {
+            let mut data: ADLPMLogDataOutput = std::mem::zeroed();
+            if pmlog_get(context, idx, &mut data) != 0 {
+                continue;
+            }
+            for &sensor_idx in POWER_SENSOR_CANDIDATES {
+                let [value, supported] = data.ul_values[sensor_idx];
+                if supported != 0 {
+                    let watts = value as f64;
+                    if watts >= MIN_PLAUSIBLE_W && watts <= MAX_PLAUSIBLE_W {
+                        total_power += watts;
+                        found = true;
+                        break; // Use first valid power sensor per adapter
+                    }
+                }
+            }
+        }
+
+        destroy(context);
+
+        if found { Some(total_power) } else { None }
+    }
+}
+
+/// Try AMD GPU power via WMI (fallback when ADL unavailable).
+#[cfg(target_os = "windows")]
+fn read_amd_gpu_power_wmi() -> Option<f64> {
+    use serde::Deserialize;
+
+    // Strategy A: LibreHardwareMonitor / OpenHardwareMonitor WMI namespace
+    let lhm_result = (|| -> Result<Option<f64>, Box<dyn std::error::Error>> {
+        let com_lib = COMLibrary::new()?;
+        let mon_conn = WMIConnection::with_namespace_path("root\\LibreHardwareMonitor", com_lib)
+            .or_else(|_| WMIConnection::with_namespace_path("root\\OpenHardwareMonitor", COMLibrary::new()?))?;
+
+        #[derive(Deserialize)]
+        struct HwSensor {
+            #[serde(rename = "Identifier")]
+            identifier: String,
+            #[serde(rename = "Value")]
+            value: f64,
+        }
+
+        let sensors: Vec<HwSensor> = mon_conn
+            .raw_query("SELECT Identifier, Value FROM Sensor WHERE SensorType='Power'")
+            .unwrap_or_default();
+
+        let gpu_power: f64 = sensors.iter()
+            .filter(|s| s.identifier.to_lowercase().contains("gpu"))
+            .map(|s| s.value)
+            .sum();
+
+        Ok(if gpu_power > 0.0 { Some(gpu_power) } else { None })
+    })();
+
+    if let Ok(Some(w)) = lhm_result {
+        return Some(w);
+    }
+
+    // Strategy B: WMI GPU Engine utilization → scale by realistic TDP
+    // RX 6700 XT TDP ~230W; use a conservative 200W max for mixed card support
+    let wmi_result = (|| -> Result<Option<f64>, Box<dyn std::error::Error>> {
+        use std::collections::HashMap;
+        let com_lib = COMLibrary::new()?;
+        let wmi_conn = WMIConnection::new(com_lib)?;
+
+        let rows: Vec<HashMap<String, serde_json::Value>> = wmi_conn
+            .raw_query("SELECT * FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine")
+            .unwrap_or_default();
+
+        if rows.is_empty() { return Ok(None); }
+
+        let util_keys = ["PercentUsage", "Utilization", "UtilizationPercentage"];
+        let mut total = 0.0f64;
+        let mut count = 0u32;
+
+        for row in &rows {
+            let name = row.get("Name").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
+            if !name.contains("3d") && !name.contains("compute") && !name.contains("copy") { continue; }
+            for key in &util_keys {
+                if let Some(u) = row.get(*key).and_then(|v| v.as_f64()) {
+                    total += u.clamp(0.0, 100.0);
+                    count += 1;
+                    break;
+                }
+            }
+        }
+
+        if count > 0 {
+            let avg = total / count as f64;
+            // Scale: idle ~10W, full load ~200W (conservative for mixed GPU support)
+            Ok(Some(10.0 + (avg / 100.0) * 190.0))
+        } else {
+            Ok(None)
+        }
+    })();
+
+    wmi_result.ok().flatten()
 }
 
 #[cfg(not(target_os = "windows"))]
 fn detect_amd_gpu() -> Option<String> {
     None
 }
+
+#[cfg(not(target_os = "windows"))]
+fn read_amd_gpu_power_wmi() -> Option<f64> {
+    None
+}
+
 
 fn read_system_power_watts(
     system: &mut System,
@@ -191,6 +372,8 @@ fn read_system_power_watts(
     let cpu_usage = system.global_cpu_info().cpu_usage() as f64;
     let estimated_cpu_watts = 4.0 + (cpu_usage.clamp(0.0, 100.0) / 100.0) * 41.0;
 
+    eprintln!("[Kairos:DEBUG] CPU usage={:.1}% → est. CPU watts={:.1}W", cpu_usage, estimated_cpu_watts);
+
     let mut total_watts = estimated_cpu_watts;
     let mut source = String::from("cpu-estimated");
 
@@ -214,6 +397,7 @@ fn read_system_power_watts(
             }
 
             if total_gpu_watts > 0.0 {
+                eprintln!("[Kairos:DEBUG] NVIDIA GPU ({}) = {:.1}W (NVML)", gpu_model, total_gpu_watts);
                 total_watts += total_gpu_watts;
                 source.push_str("+gpu-nvml");
             }
@@ -224,21 +408,47 @@ fn read_system_power_watts(
     if gpu_model == "Unknown GPU" {
         if let Some(amd_gpu) = detect_amd_gpu() {
             gpu_model = amd_gpu;
-            // AMD power estimation: assume 50-150W typical for discrete GPU
-            // Using CPU usage as proxy for AMD GPU load when power data not directly available
-            let estimated_amd_watts = 30.0 + (cpu_usage.clamp(0.0, 100.0) / 100.0) * 90.0;
-            total_watts += estimated_amd_watts;
-            if source.contains("cpu-estimated") {
-                source = "cpu-estimated+gpu-amd".to_string();
+
+            // Priority 1: ADL2 direct (same source as Radeon Software)
+            let adl_result = read_amd_gpu_power_adl();
+            eprintln!("[Kairos:DEBUG] ADL2 result for {} = {:?}", gpu_model,
+                adl_result.map(|w| format!("{:.1}W", w)));
+
+            // Priority 2: WMI fallback
+            let wmi_result = if adl_result.is_none() {
+                let w = read_amd_gpu_power_wmi();
+                eprintln!("[Kairos:DEBUG] WMI fallback result = {:?}",
+                    w.map(|v| format!("{:.1}W", v)));
+                w
+            } else { None };
+
+            let (gpu_power, suffix) = if let Some(w) = adl_result {
+                (w, "+gpu-adl")
+            } else if let Some(w) = wmi_result {
+                (w, "+gpu-amd-wmi")
             } else {
-                source.push_str("+gpu-amd");
+                eprintln!("[Kairos:DEBUG] AMD GPU: all sensor methods failed, using 20W estimate");
+                (20.0, "+gpu-amd-est")
+            };
+
+            eprintln!("[Kairos:DEBUG] AMD GPU ({}) = {:.1}W (source={})", gpu_model, gpu_power, suffix);
+            total_watts += gpu_power;
+            if source.contains("cpu-estimated") {
+                source = format!("cpu-estimated{}", suffix);
+            } else {
+                source.push_str(suffix);
             }
+        } else {
+            eprintln!("[Kairos:DEBUG] No AMD GPU detected by WMI");
         }
     }
 
     // Add base system power draw for desktop components (PSU, motherboard, drives, etc.)
     let base_draw = 30.0_f64;
     total_watts += base_draw;
+
+    eprintln!("[Kairos:DEBUG] Base draw = {:.1}W | TOTAL = {:.1}W (source={})",
+        base_draw, total_watts, source);
 
     // Determine device type: if battery exists but never reports discharge (likely always on AC/full), treat as Desktop
     let device_type = if has_battery && !any_battery_reporting { "Desktop" } else if has_battery { "Laptop" } else { "Desktop" };
@@ -252,6 +462,18 @@ fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorSt
 
         let sample_interval_seconds = 10u64;
         let mut samples: VecDeque<PowerSample> = VecDeque::new();
+
+        // Initialize NVML once and reuse across all iterations
+        let nvml = match Nvml::init() {
+            Ok(n) => {
+                eprintln!("[Kairos] NVML initialized successfully");
+                Some(n)
+            }
+            Err(e) => {
+                eprintln!("[Kairos] NVML init failed (no NVIDIA GPU or driver issue): {}", e);
+                None
+            }
+        };
 
         loop {
             let should_collect = app_handle
@@ -267,7 +489,6 @@ fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorSt
             let now = Utc::now().timestamp();
             let (watts, source, cpu_model, gpu_model, device_type) = {
                 let mut battery_manager = BatteryManager::new().ok();
-                let nvml = Nvml::init().ok();
                 read_system_power_watts(&mut system, battery_manager.as_mut(), nvml.as_ref())
             };
 

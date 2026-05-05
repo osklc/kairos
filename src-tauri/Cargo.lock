@@ -2220,6 +2220,7 @@ dependencies = [
  "active-win-pos-rs",
  "battery",
  "chrono",
+ "libloading 0.8.9",
  "nvml-wrapper",
  "rusqlite",
  "serde",
