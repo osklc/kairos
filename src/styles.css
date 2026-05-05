@@ -506,6 +506,12 @@ body {
   gap: 16px;
 }
 
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
 .card,
 .panel {
   border: 1px solid var(--card-border);

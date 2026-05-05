@@ -165,6 +165,7 @@ async function loadAppCategories() {
         try {
           await invoke("set_app_category", { appName: app.app_name, category: newCategory });
           fetchAndRenderSummary();
+          renderDailyPieChart();
         } catch (err) {
           console.error("Failed to update category:", err);
         }
@@ -203,7 +204,6 @@ async function fetchAndRenderAppUsage() {
 }
 
 let dailyChart = null;
-let dailyEnergyChart = null;
 let dailyEnergyTotalChart = null;
 let dailyPieChart = null;
 let lastDailyStatsJson = "";
@@ -296,86 +296,7 @@ async function fetchAndRenderDailyStats() {
   }
 }
 
-function renderDailyEnergyChart() {
-  const canvas = document.getElementById("daily-energy-chart");
-  if (!canvas) return;
 
-  // Use energy history to show time series
-  if (!energyState.history || energyState.history.length === 0) {
-    console.log("No energy history data available");
-    return;
-  }
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  // Prepare chart data from energy history
-  const labels = energyState.history.map((entry) => entry.label);
-  const values = energyState.history.map((entry) => entry.watts);
-
-  const computedStyle = getComputedStyle(document.body);
-  const lineColor = computedStyle.getPropertyValue("--accent-color").trim() || "#5a9ddf";
-  const fillColor = computedStyle.getPropertyValue("--chart-color").trim() || "rgba(90, 157, 223, 0.18)";
-  const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
-  const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
-
-  if (dailyEnergyChart) {
-    dailyEnergyChart.destroy();
-  }
-
-  dailyEnergyChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: translate("energy.avgPower"),
-        data: values,
-        tension: 0.34,
-        fill: true,
-        borderColor: lineColor,
-        backgroundColor: fillColor,
-        pointRadius: 2,
-        pointBackgroundColor: lineColor,
-        borderWidth: 2,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      plugins: {
-        legend: {
-          display: true,
-          labels: { color: chartTextColor }
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return context.parsed.y.toFixed(1) + " W";
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          title: { display: true, text: "Watts", color: chartTextColor },
-          ticks: {
-            color: chartTextColor,
-            callback: function (value) {
-              return value.toFixed(0) + "W";
-            }
-          },
-          grid: { color: chartGridColor }
-        },
-        x: {
-          title: { display: true, color: chartTextColor },
-          ticks: { color: chartTextColor },
-          grid: { color: chartGridColor }
-        }
-      }
-    }
-  });
-}
 
 function renderDailyEnergyTotalChart() {
   const canvas = document.getElementById("daily-energy-total-chart");
@@ -466,25 +387,15 @@ function renderDailyEnergyTotalChart() {
   }
 }
 
-function renderDailyPieChart() {
+async function renderDailyPieChart() {
   const canvas = document.getElementById("daily-pie-chart");
   if (!canvas) return;
 
   try {
-    // Get productivity stats for pie chart from summary
-    fetch(undefined); // Dummy to get today's summary
-
-    const statTotalEl = document.getElementById("stat-total-time");
-    const statProdEl = document.getElementById("stat-productive-time");
-    const statDistEl = document.getElementById("stat-distracting-time");
-
-    // Use actual text content to parse durations
-    const totalSeconds = parseFloat(statTotalEl?.textContent?.replace(/[^\d]/g, '') || "0") * 3600;
-    const prodSeconds = parseFloat(statProdEl?.textContent?.split('h')[0] || "0") * 3600 +
-      parseFloat((statProdEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
-    const distSeconds = parseFloat(statDistEl?.textContent?.split('h')[0] || "0") * 3600 +
-      parseFloat((statDistEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
-
+    const summary = await invoke("get_today_summary");
+    const totalSeconds = summary.total_screen_time_seconds || 0;
+    const prodSeconds = summary.productive_time_seconds || 0;
+    const distSeconds = summary.distracting_time_seconds || 0;
     const neutralSeconds = Math.max(0, totalSeconds - prodSeconds - distSeconds);
 
     const computedStyle = getComputedStyle(document.body);
@@ -634,7 +545,6 @@ function setTheme(theme, themeButtons) {
 
   // Re-render charts to pick up new theme colors
   fetchAndRenderDailyStats();
-  renderDailyEnergyChart();
   renderDailyEnergyTotalChart();
   renderDailyPieChart();
 
@@ -806,10 +716,11 @@ function updateEnergyChart() {
             grid: { color: chartGridColor, display: true },
           },
           y: {
-            beginAtZero: true,
+            beginAtZero: false,
             ticks: {
               color: chartTextColor,
-              callback: (value) => `${value}W`,
+              precision: 0,
+              callback: (value) => `${Math.round(value)}W`,
             },
             grid: { color: chartGridColor }
           },
@@ -1204,7 +1115,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       loadAppCategories();
     } else if (pageId === "page-daily") {
       fetchAndRenderDailyStats();
-      renderDailyEnergyChart();
       renderDailyEnergyTotalChart();
       renderDailyPieChart();
     } else if (pageId === "page-pomodoro") {

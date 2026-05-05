@@ -196,49 +196,53 @@ fn read_amd_gpu_power_adl() -> Option<f64> {
             return None;
         }
 
-        // Named power sensors (index, min_plausible_W, max_plausible_W, label)
-        let power_sensors: &[(usize, u32, u32, &str)] = &[
-            (16, 5, 600, "SocketPower"),
-            (26, 5, 600, "GfxPower"),
-            (44, 5, 600, "TotalBoardPower"),
-        ];
-
-        // Scan all adapters; use adapter 0 (usually the physical GPU)
-        let mut result_watts: Option<f64> = None;
+        let result_watts: Option<f64> = None;
 
         // Log all non-zero sensor values on first call only
-        static ADL_SCANNED: std::sync::atomic::AtomicBool =
-            std::sync::atomic::AtomicBool::new(false);
-        let do_full_scan = !ADL_SCANNED.swap(true, std::sync::atomic::Ordering::Relaxed);
+        // Scan ALL adapters and ALL 256 sensor slots.
+        // Track the best candidate for each named power sensor.
+        let mut socket_power: Option<f64> = None;   // sensor 16 — preferred (total socket)
+        let mut board_power:  Option<f64> = None;   // sensor 44 — preferred (total board)
+        let mut gfx_power:    Option<f64> = None;   // sensor 26 — GPU core only (fallback)
+        let mut any_highest:  f64 = 0.0;            // any plausible sensor ≥ 5W
 
-        'outer: for idx in 0..adapter_count.min(3) {
+        for idx in 0..adapter_count {
             let mut data: ADLPMLogDataOutput = std::mem::zeroed();
             if pmlog_get(context, idx, &mut data) != 0 { continue; }
 
-            if do_full_scan && idx == 0 {
-                eprintln!("[Kairos:ADL] Full sensor scan for adapter 0:");
-                for s in 0..MAX_SENSORS {
-                    let [v, sup] = data.ul_values[s];
-                    if v > 0 {
-                        eprintln!("  [{}] value={} supported={}", s, v, sup);
-                    }
-                }
-            }
+            // Named power sensors
+            let [v16, _] = data.ul_values[16];
+            let [v26, _] = data.ul_values[26];
+            let [v44, _] = data.ul_values[44];
 
-            for &(sensor_idx, min_w, max_w, label) in power_sensors {
-                let [value, _] = data.ul_values[sensor_idx];
-                if value >= min_w && value <= max_w {
-                    eprintln!("[Kairos:ADL] Adapter {} sensor[{}]={} = {}W", idx, sensor_idx, label, value);
-                    result_watts = Some(value as f64);
-                    break 'outer;
+            if v16 >= 5 && v16 <= 600 { socket_power = Some(v16 as f64); }
+            if v44 >= 5 && v44 <= 600 { board_power  = Some(v44 as f64); }
+            if v26 >= 5 && v26 <= 600 { gfx_power    = Some(v26 as f64); }
+
+            for s in 0..MAX_SENSORS {
+                let [v, _] = data.ul_values[s];
+                if v as f64 > any_highest && v >= 5 && v <= 600 {
+                    any_highest = v as f64;
                 }
             }
         }
 
         destroy(context);
+
+        // Priority: TotalBoardPower > SocketPower > GfxPower × calibration
+        if let Some(w) = board_power { return Some(w); }
+        if let Some(w) = socket_power { return Some(w); }
+        if let Some(w) = gfx_power {
+            // GfxPower (sensor 26) = shader core only, ~45-50% of total board power on RDNA2.
+            // Apply 2.0× calibration to approximate total GPU package power.
+            // Observed: GfxPower ≈ 52W when Radeon Software shows 120W → ratio ≈ 2.3×
+            return Some((w * 2.0).min(600.0));
+        }
+
         result_watts
     }
 }
+
 
 
 /// Try AMD GPU power via WMI (fallback when ADL unavailable).
@@ -274,7 +278,6 @@ fn read_amd_gpu_power_wmi() -> Option<f64> {
     })();
 
     if let Ok(Some(w)) = lhm_result {
-        eprintln!("[Kairos:WMI] LibreHardwareMonitor GPU power = {:.1}W", w);
         return Some(w);
     }
 
@@ -319,9 +322,6 @@ fn read_amd_gpu_power_wmi() -> Option<f64> {
 
             for key in &util_keys {
                 if let Some(u) = row.get(*key).and_then(|v| v.as_f64()) {
-                    if u > 0.0 {
-                        eprintln!("[Kairos:WMI] engine='{}' {}={:.1}%", engine_key, key, u);
-                    }
                     *engine_sums.entry(engine_key.clone()).or_insert(0.0) += u;
                     break;
                 }
@@ -330,22 +330,16 @@ fn read_amd_gpu_power_wmi() -> Option<f64> {
 
         if engine_sums.is_empty() { return Ok(None); }
 
-        // Each engine's total utilization capped at 100%, then sum all engines
-        // (3D engines drive most GPU power; copy engines less so)
         let total_util: f64 = engine_sums.values()
             .map(|&v| v.min(100.0))
             .sum::<f64>()
-            .min(200.0); // cap at 200% total (handles dual-engine setups)
+            .min(200.0);
 
-        // Normalize to 0-100% assuming max realistic sum is ~150% for heavy workloads
+        // Normalize to 0-100% (max realistic sum ~150% for heavy workloads)
         let normalized = (total_util / 150.0 * 100.0).min(100.0);
-
-        eprintln!("[Kairos:WMI] {} unique engines, sum_util={:.1}%, normalized={:.1}%",
-            engine_sums.len(), total_util, normalized);
 
         // RX 6700 XT TDP ~230W; scale: idle=10W, full load=220W
         let watts = 10.0 + (normalized / 100.0) * 210.0;
-        eprintln!("[Kairos:WMI] estimated GPU power = {:.1}W", watts);
         Ok(Some(watts))
     })();
 
@@ -409,8 +403,6 @@ fn read_system_power_watts(
     let cpu_usage = system.global_cpu_info().cpu_usage() as f64;
     let estimated_cpu_watts = 4.0 + (cpu_usage.clamp(0.0, 100.0) / 100.0) * 41.0;
 
-    eprintln!("[Kairos:DEBUG] CPU usage={:.1}% → est. CPU watts={:.1}W", cpu_usage, estimated_cpu_watts);
-
     let mut total_watts = estimated_cpu_watts;
     let mut source = String::from("cpu-estimated");
 
@@ -434,7 +426,6 @@ fn read_system_power_watts(
             }
 
             if total_gpu_watts > 0.0 {
-                eprintln!("[Kairos:DEBUG] NVIDIA GPU ({}) = {:.1}W (NVML)", gpu_model, total_gpu_watts);
                 total_watts += total_gpu_watts;
                 source.push_str("+gpu-nvml");
             }
@@ -446,37 +437,20 @@ fn read_system_power_watts(
         if let Some(amd_gpu) = detect_amd_gpu() {
             gpu_model = amd_gpu;
 
-            // Priority 1: ADL2 direct (same source as Radeon Software)
-            let adl_result = read_amd_gpu_power_adl();
-            eprintln!("[Kairos:DEBUG] ADL2 result for {} = {:?}", gpu_model,
-                adl_result.map(|w| format!("{:.1}W", w)));
-
-            // Priority 2: WMI fallback
-            let wmi_result = if adl_result.is_none() {
-                let w = read_amd_gpu_power_wmi();
-                eprintln!("[Kairos:DEBUG] WMI fallback result = {:?}",
-                    w.map(|v| format!("{:.1}W", v)));
-                w
-            } else { None };
-
-            let (gpu_power, suffix) = if let Some(w) = adl_result {
+            let (gpu_power, suffix) = if let Some(w) = read_amd_gpu_power_adl() {
                 (w, "+gpu-adl")
-            } else if let Some(w) = wmi_result {
+            } else if let Some(w) = read_amd_gpu_power_wmi() {
                 (w, "+gpu-amd-wmi")
             } else {
-                eprintln!("[Kairos:DEBUG] AMD GPU: all sensor methods failed, using 20W estimate");
                 (20.0, "+gpu-amd-est")
             };
 
-            eprintln!("[Kairos:DEBUG] AMD GPU ({}) = {:.1}W (source={})", gpu_model, gpu_power, suffix);
             total_watts += gpu_power;
             if source.contains("cpu-estimated") {
                 source = format!("cpu-estimated{}", suffix);
             } else {
                 source.push_str(suffix);
             }
-        } else {
-            eprintln!("[Kairos:DEBUG] No AMD GPU detected by WMI");
         }
     }
 
@@ -484,10 +458,7 @@ fn read_system_power_watts(
     let base_draw = 30.0_f64;
     total_watts += base_draw;
 
-    eprintln!("[Kairos:DEBUG] Base draw = {:.1}W | TOTAL = {:.1}W (source={})",
-        base_draw, total_watts, source);
-
-    // Determine device type: if battery exists but never reports discharge (likely always on AC/full), treat as Desktop
+    // Determine device type
     let device_type = if has_battery && !any_battery_reporting { "Desktop" } else if has_battery { "Laptop" } else { "Desktop" };
 
     (total_watts.max(0.0), source, cpu_model, gpu_model, device_type.to_string())

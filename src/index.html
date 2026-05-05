@@ -247,33 +247,28 @@
       </section>
 
       <section class="page" id="page-daily" aria-label="Daily charts page">
-        <article class="panel">
-          <h3 data-i18n="daily.title">Daily Screen Time</h3>
-          <div class="chart-container" style="position: relative; height:40vh; width:100%">
-            <canvas id="daily-chart"></canvas>
-          </div>
-        </article>
+        <div class="charts-grid">
+          <article class="panel">
+            <h3 data-i18n="daily.title">Daily Screen Time</h3>
+            <div class="chart-container" style="position: relative; height:30vh; width:100%">
+              <canvas id="daily-chart"></canvas>
+            </div>
+          </article>
 
-        <article class="panel">
-          <h3 data-i18n="daily.energyTitle">Daily Energy Usage</h3>
-          <div class="chart-container" style="position: relative; height:40vh; width:100%">
-            <canvas id="daily-energy-chart"></canvas>
-          </div>
-        </article>
+          <article class="panel">
+            <h3 data-i18n="daily.energyTotalTitle">Daily Total Energy Consumption</h3>
+            <div class="chart-container" style="position: relative; height:30vh; width:100%">
+              <canvas id="daily-energy-total-chart"></canvas>
+            </div>
+          </article>
 
-        <article class="panel">
-          <h3 data-i18n="daily.energyTotalTitle">Daily Total Energy Consumption</h3>
-          <div class="chart-container" style="position: relative; height:40vh; width:100%">
-            <canvas id="daily-energy-total-chart"></canvas>
-          </div>
-        </article>
-
-        <article class="panel">
-          <h3 data-i18n="daily.categoryBreakdown">Time Distribution by Category</h3>
-          <div class="chart-container" style="position: relative; height:40vh; width:100%">
-            <canvas id="daily-pie-chart"></canvas>
-          </div>
-        </article>
+          <article class="panel">
+            <h3 data-i18n="daily.categoryBreakdown">Time Distribution by Category</h3>
+            <div class="chart-container" style="position: relative; height:30vh; width:100%">
+              <canvas id="daily-pie-chart"></canvas>
+            </div>
+          </article>
+        </div>
       </section>
 
 
