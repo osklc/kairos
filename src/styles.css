@@ -25,6 +25,8 @@
   --text-on-field: #1A1A1B;
   --accent-color: #8C7851;
   --chart-color: rgba(140, 120, 81, 0.6);
+  --chart-text-color: #1A1A1B;
+  --chart-grid-color: rgba(26, 26, 27, 0.1);
   --pomo-focus: #8C7851;
   --pomo-break: #8B4513;
   --pomo-pause: #736242;
@@ -78,6 +80,8 @@ body[data-theme="black"] {
   --text-on-field: #f0f0f0;
   --accent-color: #8a8a8a;
   --chart-color: rgba(138, 138, 138, 0.6);
+  --chart-text-color: #edf2f8;
+  --chart-grid-color: rgba(237, 242, 248, 0.1);
   /* Sound variables */
   --s-bg-card: rgba(30, 30, 30, 0.9);
   --s-bg-card-hover: rgba(45, 45, 45, 0.95);
@@ -116,6 +120,8 @@ body[data-theme="midnight"] {
   --text-on-field: #f8fafc;
   --accent-color: #8E764B;
   --chart-color: rgba(142, 118, 75, 0.65);
+  --chart-text-color: #f8fafc;
+  --chart-grid-color: rgba(248, 250, 252, 0.1);
   /* Sound variables */
   --s-bg-card: rgba(30, 41, 59, 0.8);
   --s-bg-card-hover: rgba(45, 55, 75, 0.9);
@@ -156,6 +162,8 @@ body[data-theme="nord"] {
   --text-on-field: #eceff4;
   --accent-color: #88c0d0;
   --chart-color: rgba(136, 192, 208, 0.6);
+  --chart-text-color: #eceff4;
+  --chart-grid-color: rgba(236, 239, 244, 0.1);
   /* Sound variables */
   --s-bg-card: #3b4252;
   --s-bg-card-hover: #434c5e;
@@ -196,6 +204,8 @@ body[data-theme="cyberpunk"] {
   --text-on-field: #00ffea;
   --accent-color: #00ffea;
   --chart-color: rgba(0, 255, 234, 0.7);
+  --chart-text-color: #00ffea;
+  --chart-grid-color: rgba(0, 255, 234, 0.15);
   /* Sound variables */
   --s-bg-card: rgba(13, 2, 33, 0.9);
   --s-bg-card-hover: rgba(36, 11, 54, 0.95);
@@ -236,6 +246,8 @@ body[data-theme="rosepine"] {
   --text-on-field: #e0def4;
   --accent-color: #ebbcba;
   --chart-color: rgba(235, 188, 186, 0.6);
+  --chart-text-color: #e0def4;
+  --chart-grid-color: rgba(224, 222, 244, 0.1);
   /* Sound variables */
   --s-bg-card: #1f1d2e;
   --s-bg-card-hover: #26233a;
@@ -276,6 +288,8 @@ body[data-theme="forest"] {
   --text-on-field: #f0fdf4;
   --accent-color: #10b981;
   --chart-color: rgba(16, 185, 129, 0.6);
+  --chart-text-color: #f0fdf4;
+  --chart-grid-color: rgba(240, 253, 244, 0.1);
   /* Sound variables */
   --s-bg-card: rgba(6, 78, 59, 0.85);
   --s-bg-card-hover: rgba(6, 95, 70, 0.9);
@@ -392,6 +406,8 @@ body {
   cursor: pointer;
   text-align: left;
   box-shadow: none;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 
 .nav-link:hover,
@@ -709,7 +725,10 @@ button {
   gap: 10px;
   align-content: center;
   min-height: 240px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent), var(--card-bg);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%), var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--s-radius);
+  box-shadow: var(--card-shadow);
 }
 
 .energy-meter-label {
@@ -748,6 +767,7 @@ button {
   display: grid;
   gap: 12px;
   padding: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent);
 }
 
 .energy-info-card > div,
@@ -770,6 +790,10 @@ button {
 .energy-chart-card {
   height: 260px;
   padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--s-radius);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%), var(--card-bg);
+  box-shadow: var(--card-shadow);
 }
 
 .energy-chart-card canvas {
@@ -779,6 +803,7 @@ button {
 
 .energy-source-card {
   padding: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent);
 }
 
 .energy-source-card h4 {
@@ -994,11 +1019,14 @@ button {
   background: var(--pomo-focus);
   color: #fff;
   border-color: var(--pomo-focus);
-  opacity: 0.9;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .pomo-btn-start:hover {
-  opacity: 1;
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
 }
 
 .pomo-btn-pause {
@@ -1089,6 +1117,27 @@ button {
   font-size: 0.9rem;
 }
 
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 900px) {
 
   .sidebar,
@@ -1102,6 +1151,7 @@ button {
   .sidebar .caret {
     display: none;
   }
+
 
   .sidebar .nav-link,
   .sidebar .nav-group-trigger {

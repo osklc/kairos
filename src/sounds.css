@@ -36,12 +36,14 @@
 }
 
 .sounds-app .sounds-title {
-  font-family: 'Cinzel', 'Georgia', serif;
-  font-weight: 600;
-  font-size: 18px;
-  letter-spacing: 4px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 3px;
   color: var(--s-bronze);
-  margin-bottom: 6px;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .sounds-app .sounds-subtitle {

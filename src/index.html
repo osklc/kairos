@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="sounds.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kairos: Screen Time Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -27,6 +29,22 @@
         <button class="btn-distracting" data-cat="distracting" data-i18n="modal.distracting">Distracting</button>
       </div>
       <button class="btn-skip" id="modal-btn-skip" data-i18n="modal.skip">Skip for now</button>
+    </div>
+  </div>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimer-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 data-i18n="energy.disclaimerTitle">About Accuracy</h3>
+      <p data-i18n="energy.disclaimerText">
+        Kairos chooses the most accurate measurement method based on your device type. On laptops, all system data is
+        pulled from the battery management unit; on desktop systems, CPU and GPU sensor data are complemented with
+        estimated consumption of motherboards and other components to provide a projection. These values are
+        approximately 95% accurate to actual measurements.
+      </p>
+      <div class="modal-buttons">
+        <button id="disclaimer-close" class="btn-primary" data-i18n="common.close">Close</button>
+      </div>
     </div>
   </div>
 
@@ -112,13 +130,6 @@
           <span class="label" data-i18n="nav.goals">Goals</span>
         </button>
 
-        <button class="nav-link" type="button" data-page="notes">
-          <svg class="icon" aria-hidden="true" focusable="false">
-            <use href="/assets/sidebar-icons.svg#icon-notes"></use>
-          </svg>
-          <span class="label" data-i18n="nav.notes">Notes</span>
-        </button>
-
         <button class="nav-link" type="button" data-page="settings">
           <svg class="icon" aria-hidden="true" focusable="false">
             <use href="/assets/sidebar-icons.svg#icon-settings"></use>
@@ -172,9 +183,12 @@
             </div>
 
             <div class="energy-segmented" role="tablist" aria-label="Smoothing mode">
-              <button type="button" class="energy-mode-btn" data-energy-mode="eco" data-i18n="energy.modeEco">Eco</button>
-              <button type="button" class="energy-mode-btn active" data-energy-mode="balanced" data-i18n="energy.modeBalanced">Balanced</button>
-              <button type="button" class="energy-mode-btn" data-energy-mode="performance" data-i18n="energy.modePerformance">Performance</button>
+              <button type="button" class="energy-mode-btn" data-energy-mode="eco"
+                data-i18n="energy.modeEco">Eco</button>
+              <button type="button" class="energy-mode-btn active" data-energy-mode="balanced"
+                data-i18n="energy.modeBalanced">Balanced</button>
+              <button type="button" class="energy-mode-btn" data-energy-mode="performance"
+                data-i18n="energy.modePerformance">Performance</button>
             </div>
           </div>
 
@@ -182,7 +196,11 @@
             <div class="energy-meter-card">
               <span class="energy-meter-label" data-i18n="energy.instantPower">Instant Power</span>
               <div class="energy-watt-readout"><span id="energy-current-w">0</span><span>W</span></div>
-              <p class="energy-kwh-readout"><span id="energy-daily-total">0.000</span> kWh <span data-i18n="energy.today">today</span></p>
+              <p class="energy-range" id="energy-range">—</p>
+              <button id="energy-disclaimer-btn" class="btn-small" style="margin-top:6px;"
+                data-i18n="energy.disclaimerTitle">About Accuracy</button>
+              <p class="energy-kwh-readout"><span id="energy-daily-total">0.000</span> kWh <span
+                  data-i18n="energy.today">today</span></p>
             </div>
 
             <div class="energy-info-card">
@@ -206,7 +224,7 @@
           </div>
 
           <div class="energy-source-card">
-            <h4 data-i18n="energy.sourceTitle">Veri Kaynağı</h4>
+            <h4 data-i18n="energy.sourceTitle">Measurement Source</h4>
             <div class="source-grid">
               <div>
                 <span data-i18n="energy.cpuModel">CPU Modeli</span>
@@ -217,7 +235,11 @@
                 <strong id="energy-gpu-model">—</strong>
               </div>
               <div>
-                <span data-i18n="energy.sensorSource">Sensor Source</span>
+                <span data-i18n="energy.deviceType">Aygıt Türü</span>
+                <strong id="energy-device-type">—</strong>
+              </div>
+              <div>
+                <span data-i18n="energy.sensorSource">Veri Kaynağı</span>
                 <strong id="energy-source">—</strong>
               </div>
             </div>
@@ -239,6 +261,27 @@
           <h3 data-i18n="daily.title">Daily Screen Time</h3>
           <div class="chart-container" style="position: relative; height:40vh; width:100%">
             <canvas id="daily-chart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3 data-i18n="daily.energyTitle">Daily Energy Usage</h3>
+          <div class="chart-container" style="position: relative; height:40vh; width:100%">
+            <canvas id="daily-energy-chart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3 data-i18n="daily.energyTotalTitle">Daily Total Energy Consumption</h3>
+          <div class="chart-container" style="position: relative; height:40vh; width:100%">
+            <canvas id="daily-energy-total-chart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3 data-i18n="daily.categoryBreakdown">Time Distribution by Category</h3>
+          <div class="chart-container" style="position: relative; height:40vh; width:100%">
+            <canvas id="daily-pie-chart"></canvas>
           </div>
         </article>
       </section>
@@ -338,8 +381,8 @@
               <div class="track-header">
                 <div class="track-info">
                   <span class="track-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
                       <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
                     </svg>
                   </span>
@@ -358,15 +401,13 @@
               </div>
               <div class="track-slider-row">
                 <span class="slider-label-min">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                   </svg>
                 </span>
                 <input class="track-volume" type="range" min="0" max="100" value="50" />
                 <span class="slider-label-max">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
@@ -380,8 +421,8 @@
               <div class="track-header">
                 <div class="track-info">
                   <span class="track-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
                       <path d="M17 8l4 4-4 4" />
                       <path d="M3 12h18" />
                       <path d="M12 2v4" />
@@ -406,15 +447,13 @@
               </div>
               <div class="track-slider-row">
                 <span class="slider-label-min">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                   </svg>
                 </span>
                 <input class="track-volume" type="range" min="0" max="100" value="50" />
                 <span class="slider-label-max">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
@@ -428,8 +467,8 @@
               <div class="track-header">
                 <div class="track-info">
                   <span class="track-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <circle cx="12" cy="12" r="3" />
                       <line x1="12" y1="2" x2="12" y2="6" />
@@ -453,15 +492,13 @@
               </div>
               <div class="track-slider-row">
                 <span class="slider-label-min">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                   </svg>
                 </span>
                 <input class="track-volume" type="range" min="0" max="100" value="50" />
                 <span class="slider-label-max">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />

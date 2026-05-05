@@ -97,6 +97,7 @@ struct PowerUsagePayload {
     averaging_window_seconds: u64,
     sample_count: usize,
     source: String,
+    device_type: String,
     cpu_model: String,
     gpu_model: String,
     smoothing_mode: String,
@@ -148,7 +149,7 @@ fn read_system_power_watts(
     system: &mut System,
     battery_manager: Option<&mut BatteryManager>,
     nvml: Option<&Nvml>,
-) -> (f64, String, String, String) {
+) -> (f64, String, String, String, String) {
     let cpu_model = system
         .cpus()
         .first()
@@ -158,24 +159,32 @@ fn read_system_power_watts(
 
     let mut gpu_model = "Unknown GPU".to_string();
 
+    // Detect whether machine has a battery (Laptop) or not (Desktop).
+    let mut has_battery = false;
+    let mut observed_battery_watts = 0.0f64;
+    let mut any_battery_reporting = false;
     if let Some(manager) = battery_manager {
         if let Ok(batteries) = manager.batteries() {
-            let mut total_battery_watts = 0.0;
             for battery in batteries.flatten() {
+                has_battery = true;
                 let battery_watts = battery.energy_rate().get::<watt>().abs();
-                if battery_watts.is_finite() {
-                    total_battery_watts += battery_watts;
+                if battery_watts.is_finite() && battery_watts > 0.0 {
+                    observed_battery_watts += battery_watts as f64;
+                    any_battery_reporting = true;
                 }
             }
-            if total_battery_watts > 0.0 {
-                return (
-                    total_battery_watts as f64,
-                    "battery-sensor".to_string(),
-                    cpu_model,
-                    gpu_model,
-                );
-            }
         }
+    }
+
+    // If we have a battery and it reports a discharge rate, prefer battery sensor as full-system consumption.
+    if has_battery && any_battery_reporting {
+        return (
+            observed_battery_watts as f64,
+            "battery-sensor".to_string(),
+            cpu_model,
+            gpu_model,
+            "Laptop".to_string(),
+        );
     }
 
     system.refresh_cpu_usage();
@@ -227,7 +236,14 @@ fn read_system_power_watts(
         }
     }
 
-    (total_watts.max(0.0), source, cpu_model, gpu_model)
+    // Add base system power draw for desktop components (PSU, motherboard, drives, etc.)
+    let base_draw = 30.0_f64;
+    total_watts += base_draw;
+
+    // Determine device type: if battery exists but never reports discharge (likely always on AC/full), treat as Desktop
+    let device_type = if has_battery && !any_battery_reporting { "Desktop" } else if has_battery { "Laptop" } else { "Desktop" };
+
+    (total_watts.max(0.0), source, cpu_model, gpu_model, device_type.to_string())
 }
 
 fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorState) {
@@ -249,7 +265,7 @@ fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorSt
             }
 
             let now = Utc::now().timestamp();
-            let (watts, source, cpu_model, gpu_model) = {
+            let (watts, source, cpu_model, gpu_model, device_type) = {
                 let mut battery_manager = BatteryManager::new().ok();
                 let nvml = Nvml::init().ok();
                 read_system_power_watts(&mut system, battery_manager.as_mut(), nvml.as_ref())
@@ -287,6 +303,7 @@ fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorSt
                 averaging_window_seconds,
                 sample_count: samples.len(),
                 source,
+                device_type,
                 cpu_model,
                 gpu_model,
                 smoothing_mode: smoothing_mode.label().to_string(),

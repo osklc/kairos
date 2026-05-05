@@ -203,6 +203,9 @@ async function fetchAndRenderAppUsage() {
 }
 
 let dailyChart = null;
+let dailyEnergyChart = null;
+let dailyEnergyTotalChart = null;
+let dailyPieChart = null;
 let lastDailyStatsJson = "";
 
 async function fetchAndRenderDailyStats() {
@@ -213,26 +216,19 @@ async function fetchAndRenderDailyStats() {
     const stats = await invoke("get_daily_stats");
     const statsJson = JSON.stringify(stats);
 
-    // Only update if data changed or chart doesn't exist
-    if (statsJson === lastDailyStatsJson && dailyChart) {
-      return;
-    }
-    lastDailyStatsJson = statsJson;
-
     const labels = stats.map(s => s.day);
     const data = stats.map(s => s.total_seconds / 3600); // hours
 
     const computedStyle = getComputedStyle(document.body);
     const chartBgColor = computedStyle.getPropertyValue('--chart-color').trim() || 'rgba(78, 158, 229, 0.6)';
     const chartBorderColor = computedStyle.getPropertyValue('--accent-color').trim() || 'rgba(78, 158, 229, 1)';
+    const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
+    const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
 
+    // Always recreate chart to ensure colors update with theme
     if (dailyChart) {
-      dailyChart.data.labels = labels;
-      dailyChart.data.datasets[0].data = data;
-      dailyChart.data.datasets[0].backgroundColor = chartBgColor;
-      dailyChart.data.datasets[0].borderColor = chartBorderColor;
-      dailyChart.update('none');
-      return;
+      dailyChart.destroy();
+      dailyChart = null;
     }
 
     const ctx = canvas.getContext("2d");
@@ -257,6 +253,7 @@ async function fetchAndRenderDailyStats() {
           y: {
             beginAtZero: true,
             ticks: {
+              color: chartTextColor,
               callback: function (value) {
                 const hours = Math.floor(value);
                 const minutes = Math.round((value - hours) * 60);
@@ -265,7 +262,14 @@ async function fetchAndRenderDailyStats() {
                 if (minutes === 0) return hours + hLabel;
                 return `${hours}${hLabel} ${minutes}${mLabel}`;
               }
-            }
+            },
+            title: { color: chartTextColor },
+            grid: { color: chartGridColor }
+          },
+          x: {
+            ticks: { color: chartTextColor },
+            title: { color: chartTextColor },
+            grid: { color: chartGridColor }
           }
         },
         plugins: {
@@ -289,6 +293,266 @@ async function fetchAndRenderDailyStats() {
     });
   } catch (err) {
     console.error("Failed to fetch daily stats:", err);
+  }
+}
+
+function renderDailyEnergyChart() {
+  const canvas = document.getElementById("daily-energy-chart");
+  if (!canvas) return;
+
+  // Use energy history to show time series
+  if (!energyState.history || energyState.history.length === 0) {
+    console.log("No energy history data available");
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // Prepare chart data from energy history
+  const labels = energyState.history.map((entry) => entry.label);
+  const values = energyState.history.map((entry) => entry.watts);
+
+  const computedStyle = getComputedStyle(document.body);
+  const lineColor = computedStyle.getPropertyValue("--accent-color").trim() || "#5a9ddf";
+  const fillColor = computedStyle.getPropertyValue("--chart-color").trim() || "rgba(90, 157, 223, 0.18)";
+  const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
+  const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
+
+  if (dailyEnergyChart) {
+    dailyEnergyChart.destroy();
+  }
+
+  dailyEnergyChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: translate("energy.avgPower"),
+        data: values,
+        tension: 0.34,
+        fill: true,
+        borderColor: lineColor,
+        backgroundColor: fillColor,
+        pointRadius: 2,
+        pointBackgroundColor: lineColor,
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: { 
+          display: true,
+          labels: { color: chartTextColor }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return context.parsed.y.toFixed(1) + " W";
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: "Watts", color: chartTextColor },
+          ticks: {
+            color: chartTextColor,
+            callback: function (value) {
+              return value.toFixed(0) + "W";
+            }
+          },
+          grid: { color: chartGridColor }
+        },
+        x: {
+          title: { display: true, color: chartTextColor },
+          ticks: { color: chartTextColor },
+          grid: { color: chartGridColor }
+        }
+      }
+    }
+  });
+}
+
+function renderDailyEnergyTotalChart() {
+  const canvas = document.getElementById("daily-energy-total-chart");
+  if (!canvas) return;
+
+  try {
+    const labels = [];
+    const data = [];
+    const now = new Date();
+
+    // Get last 7 days of history from localStorage
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const storageKey = ENERGY_STORAGE_PREFIX + dayKey;
+      const kwh = parseFloat(localStorage.getItem(storageKey) || "0");
+      
+      labels.push(dayKey);
+      data.push(kwh);
+    }
+
+    const computedStyle = getComputedStyle(document.body);
+    const accentColor = computedStyle.getPropertyValue('--accent-color').trim() || '#5a9ddf';
+    const chartBgColor = computedStyle.getPropertyValue('--chart-color').trim() || 'rgba(90, 157, 223, 0.6)';
+    const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
+    const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
+
+    if (dailyEnergyTotalChart) {
+      dailyEnergyTotalChart.destroy();
+      dailyEnergyTotalChart = null;
+    }
+
+    const ctx = canvas.getContext("2d");
+    dailyEnergyTotalChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: translate("daily.energyTotalTitle"),
+          data: data,
+          backgroundColor: chartBgColor,
+          borderColor: accentColor,
+          borderWidth: 1,
+          borderRadius: 8,
+        }]
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: chartTextColor,
+              callback: function (value) {
+                return value.toFixed(2) + " kWh";
+              }
+            },
+            title: {
+              display: true,
+              text: "kWh",
+              color: chartTextColor
+            },
+            grid: { color: chartGridColor }
+          },
+          x: {
+            ticks: { color: chartTextColor },
+            title: { color: chartTextColor },
+            grid: { color: chartGridColor }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return context.parsed.y.toFixed(3) + " kWh";
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Failed to render daily energy total chart:", err);
+  }
+}
+
+function renderDailyPieChart() {
+  const canvas = document.getElementById("daily-pie-chart");
+  if (!canvas) return;
+
+  try {
+    // Get productivity stats for pie chart from summary
+    fetch(undefined); // Dummy to get today's summary
+    
+    const statTotalEl = document.getElementById("stat-total-time");
+    const statProdEl = document.getElementById("stat-productive-time");
+    const statDistEl = document.getElementById("stat-distracting-time");
+
+    // Use actual text content to parse durations
+    const totalSeconds = parseFloat(statTotalEl?.textContent?.replace(/[^\d]/g, '') || "0") * 3600;
+    const prodSeconds = parseFloat(statProdEl?.textContent?.split('h')[0] || "0") * 3600 +
+                        parseFloat((statProdEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
+    const distSeconds = parseFloat(statDistEl?.textContent?.split('h')[0] || "0") * 3600 +
+                        parseFloat((statDistEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
+    
+    const neutralSeconds = Math.max(0, totalSeconds - prodSeconds - distSeconds);
+
+    const computedStyle = getComputedStyle(document.body);
+    const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
+
+    // Color palette for pie chart
+    const colors = [
+      'rgba(76, 175, 80, 0.7)',     // Green for productive
+      'rgba(244, 67, 54, 0.7)',     // Red for distracting
+      'rgba(158, 158, 158, 0.7)'    // Gray for neutral
+    ];
+
+    if (dailyPieChart) {
+      dailyPieChart.destroy();
+      dailyPieChart = null;
+    }
+
+    const ctx = canvas.getContext("2d");
+    dailyPieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: [
+          translate("daily.productive"),
+          translate("daily.distracting"),
+          translate("daily.neutral")
+        ],
+        datasets: [{
+          data: [prodSeconds, distSeconds, neutralSeconds],
+          backgroundColor: colors,
+          borderColor: [
+            'rgba(76, 175, 80, 1)',
+            'rgba(244, 67, 54, 1)',
+            'rgba(158, 158, 158, 1)'
+          ],
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: chartTextColor,
+              padding: 15,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const seconds = context.parsed;
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const hLabel = translate("duration.hours");
+                const mLabel = translate("duration.minutes");
+                if (mins === 0) return `${hours}${hLabel}`;
+                return `${hours}${hLabel} ${mins}${mLabel}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Failed to render daily pie chart:", err);
   }
 }
 
@@ -368,8 +632,18 @@ function setTheme(theme, themeButtons) {
     button.setAttribute("aria-pressed", String(isActive));
   });
 
-  // Re-render chart to pick up new theme colors
+  // Re-render charts to pick up new theme colors
   fetchAndRenderDailyStats();
+  renderDailyEnergyChart();
+  renderDailyEnergyTotalChart();
+  renderDailyPieChart();
+  
+  // Recreate energy chart with new theme colors
+  if (energyState.chart) {
+    energyState.chart.destroy();
+    energyState.chart = null;
+  }
+  updateEnergyChart();
 }
 
 async function greet() {
@@ -417,6 +691,7 @@ const energyState = {
   lastSource: "-",
   cpuModel: "—",
   gpuModel: "—",
+  deviceType: "Desktop",
   initialized: false,
   history: [],
   chart: null,
@@ -494,6 +769,8 @@ function updateEnergyChart() {
   const computedStyle = getComputedStyle(document.body);
   const lineColor = computedStyle.getPropertyValue("--accent-color").trim() || "#5a9ddf";
   const fillColor = computedStyle.getPropertyValue("--chart-color").trim() || "rgba(90, 157, 223, 0.18)";
+  const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
+  const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
 
   if (!energyState.chart) {
     energyState.chart = new Chart(ctx, {
@@ -525,14 +802,16 @@ function updateEnergyChart() {
         },
         scales: {
           x: {
-            ticks: { maxTicksLimit: 6 },
-            grid: { display: false },
+            ticks: { maxTicksLimit: 6, color: chartTextColor },
+            grid: { color: chartGridColor, display: true },
           },
           y: {
             beginAtZero: true,
             ticks: {
+              color: chartTextColor,
               callback: (value) => `${value}W`,
             },
+            grid: { color: chartGridColor }
           },
         },
       },
@@ -560,10 +839,27 @@ function updateEnergyUI() {
 
   if (avgEl) avgEl.textContent = `${avgKW.toFixed(3)} kW`;
   if (currentWEl) currentWEl.textContent = `${energyState.instantWatts.toFixed(0)}`;
+  const rangeEl = document.getElementById("energy-range");
+  const deviceTypeEl = document.getElementById("energy-device-type");
+  if (rangeEl) {
+    const center = Math.round(energyState.instantWatts || energyState.avgWatts || 0);
+    const min = center - 5;
+    const max = center + 5;
+    rangeEl.textContent = `${min}W - ${max}W`;
+  }
+  if (deviceTypeEl) deviceTypeEl.textContent = energyState.deviceType || "—";
   if (periodEl) periodEl.textContent = `${periodKWh.toFixed(3)} kWh`;
   if (dailyEl) dailyEl.textContent = loadTodayTotalKWh().toFixed(3);
   if (lastEl) lastEl.textContent = energyState.lastTimestamp ? new Date(energyState.lastTimestamp * 1000).toLocaleTimeString() : "—";
-  if (sourceEl) sourceEl.textContent = energyState.lastSource;
+  if (sourceEl) {
+    let displaySource = energyState.lastSource || "—";
+    if (energyState.deviceType === "Laptop") {
+      displaySource = "Kaynak: Batarya Sensörü";
+    } else {
+      displaySource = "Kaynak: Bileşen Tahmini";
+    }
+    sourceEl.textContent = displaySource;
+  }
   if (cpuEl) cpuEl.textContent = energyState.cpuModel;
   if (gpuEl) gpuEl.textContent = energyState.gpuModel;
 
@@ -598,6 +894,7 @@ function onPowerUsagePayload(payload) {
   const cpuModel = payload.cpu_model || "—";
   const gpuModel = payload.gpu_model || "—";
   const smoothingMode = payload.smoothing_mode;
+  const deviceType = payload.device_type || "Desktop";
 
   if (smoothingMode && ENERGY_MODE_WINDOWS[smoothingMode]) {
     energyState.mode = smoothingMode;
@@ -613,6 +910,7 @@ function onPowerUsagePayload(payload) {
   energyState.lastSource = source;
   energyState.cpuModel = cpuModel;
   energyState.gpuModel = gpuModel;
+  energyState.deviceType = deviceType;
 
   energyState.history.push({
     label: new Date(timestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -880,8 +1178,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     energy: "pages.energy",
     focus: "pages.focus",
     pomodoro: "pages.pomodoro",
+    sounds: "pages.sounds",
     goals: "pages.goals",
-    notes: "pages.notes",
     settings: "pages.settings",
   };
 
@@ -908,6 +1206,9 @@ window.addEventListener("DOMContentLoaded", async () => {
       loadAppCategories();
     } else if (pageId === "page-daily") {
       fetchAndRenderDailyStats();
+      renderDailyEnergyChart();
+      renderDailyEnergyTotalChart();
+      renderDailyPieChart();
     } else if (pageId === "page-pomodoro") {
       updatePomodoroUI();
     }
@@ -1207,6 +1508,18 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Initialize Energy UI controls
   initEnergyUI();
+  // Wire disclaimer modal button
+  try {
+    const discBtn = document.getElementById("energy-disclaimer-btn");
+    const discModal = document.getElementById("disclaimer-modal");
+    const discClose = document.getElementById("disclaimer-close");
+    if (discBtn && discModal) {
+      discBtn.addEventListener("click", () => { discModal.style.display = "block"; });
+    }
+    if (discClose && discModal) {
+      discClose.addEventListener("click", () => { discModal.style.display = "none"; });
+    }
+  } catch (e) { /* ignore */ }
 });
 
 // ── Focus Sounds Audio Engine ──
