@@ -133,6 +133,8 @@
       "energy.disclaimerTitle": "About Accuracy",
       "energy.disclaimerText": "Kairos chooses the most accurate measurement method based on your device type. On laptops, all system data is pulled from the battery management unit; on desktop systems, CPU and GPU sensor data are complemented with estimated consumption of motherboards and other components to provide a projection. These values are approximately 95% accurate to actual measurements.",
       "energy.sensitivityButton": "About Sensitivity",
+      "energy.sourceBattery": "Source: Battery Sensor",
+      "energy.sourceEstimation": "Source: Component Estimation",
       "common.close": "Close"
     },
     "tr": {
@@ -267,6 +269,8 @@
       "energy.disclaimerTitle": "Doğruluk Hakkında",
       "energy.disclaimerText": "Kairos, aygıt türünüz temelinde en doğru ölçüm yöntemini seçer. Dizüstü bilgisayarlarda, tüm sistem verileri pil yönetim biriminden alınır; masaüstü sistemlerde, CPU ve GPU sensör verileri anakart ve diğer bileşenlerin tahmin edilen tüketimleri ile tamamlanarak bir projeksiyon sağlanır. Bu değerler gerçek ölçümlere yaklaşık %95 oranında doğrudur.",
       "energy.sensitivityButton": "Duyarlılık Hakkında",
+      "energy.sourceBattery": "Kaynak: Batarya Sensörü",
+      "energy.sourceEstimation": "Kaynak: Bileşen Tahmini",
       "common.close": "Kapat"
     }
   }

@@ -344,7 +344,7 @@ function renderDailyEnergyChart() {
       maintainAspectRatio: false,
       animation: false,
       plugins: {
-        legend: { 
+        legend: {
           display: true,
           labels: { color: chartTextColor }
         },
@@ -393,7 +393,7 @@ function renderDailyEnergyTotalChart() {
       const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const storageKey = ENERGY_STORAGE_PREFIX + dayKey;
       const kwh = parseFloat(localStorage.getItem(storageKey) || "0");
-      
+
       labels.push(dayKey);
       data.push(kwh);
     }
@@ -473,7 +473,7 @@ function renderDailyPieChart() {
   try {
     // Get productivity stats for pie chart from summary
     fetch(undefined); // Dummy to get today's summary
-    
+
     const statTotalEl = document.getElementById("stat-total-time");
     const statProdEl = document.getElementById("stat-productive-time");
     const statDistEl = document.getElementById("stat-distracting-time");
@@ -481,10 +481,10 @@ function renderDailyPieChart() {
     // Use actual text content to parse durations
     const totalSeconds = parseFloat(statTotalEl?.textContent?.replace(/[^\d]/g, '') || "0") * 3600;
     const prodSeconds = parseFloat(statProdEl?.textContent?.split('h')[0] || "0") * 3600 +
-                        parseFloat((statProdEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
+      parseFloat((statProdEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
     const distSeconds = parseFloat(statDistEl?.textContent?.split('h')[0] || "0") * 3600 +
-                        parseFloat((statDistEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
-    
+      parseFloat((statDistEl?.textContent?.match(/\d+(?=m)/)?.[0]) || "0") * 60;
+
     const neutralSeconds = Math.max(0, totalSeconds - prodSeconds - distSeconds);
 
     const computedStyle = getComputedStyle(document.body);
@@ -637,7 +637,7 @@ function setTheme(theme, themeButtons) {
   renderDailyEnergyChart();
   renderDailyEnergyTotalChart();
   renderDailyPieChart();
-  
+
   // Recreate energy chart with new theme colors
   if (energyState.chart) {
     energyState.chart.destroy();
@@ -854,9 +854,9 @@ function updateEnergyUI() {
   if (sourceEl) {
     let displaySource = energyState.lastSource || "—";
     if (energyState.deviceType === "Laptop") {
-      displaySource = "Kaynak: Batarya Sensörü";
+      displaySource = translate("energy.sourceBattery");
     } else {
-      displaySource = "Kaynak: Bileşen Tahmini";
+      displaySource = translate("energy.sourceEstimation");
     }
     sourceEl.textContent = displaySource;
   }
@@ -1514,7 +1514,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const discModal = document.getElementById("disclaimer-modal");
     const discClose = document.getElementById("disclaimer-close");
     if (discBtn && discModal) {
-      discBtn.addEventListener("click", () => { discModal.style.display = "block"; });
+      discBtn.addEventListener("click", () => { discModal.style.display = "flex"; });
     }
     if (discClose && discModal) {
       discClose.addEventListener("click", () => { discModal.style.display = "none"; });
