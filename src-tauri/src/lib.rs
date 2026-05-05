@@ -149,100 +149,103 @@ fn detect_amd_gpu() -> Option<String> {
     result.ok().flatten()
 }
 
-/// Read AMD GPU power via AMD Display Library (atiadlxx.dll).
-/// This is the most accurate method — same source as Radeon Software.
+/// Read AMD GPU power via ADL2 (scans all sensor slots for any live power reading).
 #[cfg(target_os = "windows")]
 #[allow(dead_code)]
 fn read_amd_gpu_power_adl() -> Option<f64> {
     use libloading::Library;
     use std::ffi::c_void;
 
-    // ADLPMLogDataOutput: iVersion(4) + ulActiveSampleRate(4) + ulLastUpdated(8)
-    // + ulValues[256][2] (256 sensors × 2 u32s = 2048 bytes) + ulNumValidSamples(4)
-    // Total = 2068 bytes
     const MAX_SENSORS: usize = 256;
 
     #[repr(C)]
     struct ADLPMLogDataOutput {
-        i_version:            i32,
+        i_version:             i32,
         ul_active_sample_rate: u32,
-        ul_last_updated:      i64,
-        ul_values:            [[u32; 2]; MAX_SENSORS], // [value, supported]
-        ul_num_valid_samples: u32,
+        ul_last_updated:       i64,
+        ul_values:             [[u32; 2]; MAX_SENSORS],
+        ul_num_valid_samples:  u32,
     }
 
-    // Known sensor indices from AMD ADL SDK (RDNA2)
-    // We scan candidates because the index can vary slightly across driver versions
-    const POWER_SENSOR_CANDIDATES: &[usize] = &[
-        16, // ADL_PMLOG_GFX_POWER (most common)
-        26, // ADL_PMLOG_SOC_POWER
-        31, // ADL_PMLOG_TOTAL_BOARD_POWER
-    ];
-
-    // Valid GPU power range (W) — used to verify we read the right sensor
-    const MIN_PLAUSIBLE_W: f64 = 5.0;
-    const MAX_PLAUSIBLE_W: f64 = 600.0;
+    unsafe extern "C" fn adl_malloc(size: i32) -> *mut c_void {
+        let layout = std::alloc::Layout::from_size_align_unchecked(size as usize, 8);
+        std::alloc::alloc(layout) as *mut c_void
+    }
 
     unsafe {
-        let lib = Library::new("atiadlxx.dll").ok()?;
+        let lib = Library::new("atiadlxx.dll")
+            .or_else(|_| Library::new("atiadlxy.dll"))
+            .ok()?;
 
-        // ADL2_Main_Control_Create(malloc_cb, enum_connected, *context) -> int
-        type CreateFn = unsafe extern "C" fn(*const c_void, i32, *mut *mut c_void) -> i32;
-        // ADL2_Adapter_NumberOfAdapters_Get(context, *count) -> int
+        type CreateFn       = unsafe extern "C" fn(*const c_void, i32, *mut *mut c_void) -> i32;
         type AdapterCountFn = unsafe extern "C" fn(*mut c_void, *mut i32) -> i32;
-        // ADL2_New_QueryPMLogData_Get(context, adapter_idx, *output) -> int
-        type PMLogGetFn = unsafe extern "C" fn(*mut c_void, i32, *mut ADLPMLogDataOutput) -> i32;
-        // ADL2_Main_Control_Destroy(context) -> int
-        type DestroyFn = unsafe extern "C" fn(*mut c_void) -> i32;
+        type PMLogGetFn     = unsafe extern "C" fn(*mut c_void, i32, *mut ADLPMLogDataOutput) -> i32;
+        type DestroyFn      = unsafe extern "C" fn(*mut c_void) -> i32;
 
-        let create: libloading::Symbol<CreateFn> = lib.get(b"ADL2_Main_Control_Create").ok()?;
-        let adapter_count_fn: libloading::Symbol<AdapterCountFn> = lib.get(b"ADL2_Adapter_NumberOfAdapters_Get").ok()?;
-        let pmlog_get: libloading::Symbol<PMLogGetFn> = lib.get(b"ADL2_New_QueryPMLogData_Get").ok()?;
-        let destroy: libloading::Symbol<DestroyFn> = lib.get(b"ADL2_Main_Control_Destroy").ok()?;
+        let create    = lib.get::<CreateFn>(b"ADL2_Main_Control_Create").ok()?;
+        let get_count = lib.get::<AdapterCountFn>(b"ADL2_Adapter_NumberOfAdapters_Get").ok()?;
+        let pmlog_get = lib.get::<PMLogGetFn>(b"ADL2_New_QueryPMLogData_Get").ok()?;
+        let destroy   = lib.get::<DestroyFn>(b"ADL2_Main_Control_Destroy").ok()?;
 
         let mut context: *mut c_void = std::ptr::null_mut();
-        // Pass null malloc callback — ADL uses its internal allocator
-        if create(std::ptr::null(), 1, &mut context) != 0 {
-            return None;
-        }
+        if create(adl_malloc as *const c_void, 1, &mut context) != 0 { return None; }
 
         let mut adapter_count = 0i32;
-        if adapter_count_fn(context, &mut adapter_count) != 0 || adapter_count == 0 {
+        if get_count(context, &mut adapter_count) != 0 || adapter_count == 0 {
             destroy(context);
             return None;
         }
 
-        let mut total_power = 0.0f64;
-        let mut found = false;
+        // Named power sensors (index, min_plausible_W, max_plausible_W, label)
+        let power_sensors: &[(usize, u32, u32, &str)] = &[
+            (16, 5, 600, "SocketPower"),
+            (26, 5, 600, "GfxPower"),
+            (44, 5, 600, "TotalBoardPower"),
+        ];
 
-        for idx in 0..adapter_count {
+        // Scan all adapters; use adapter 0 (usually the physical GPU)
+        let mut result_watts: Option<f64> = None;
+
+        // Log all non-zero sensor values on first call only
+        static ADL_SCANNED: std::sync::atomic::AtomicBool =
+            std::sync::atomic::AtomicBool::new(false);
+        let do_full_scan = !ADL_SCANNED.swap(true, std::sync::atomic::Ordering::Relaxed);
+
+        'outer: for idx in 0..adapter_count.min(3) {
             let mut data: ADLPMLogDataOutput = std::mem::zeroed();
-            if pmlog_get(context, idx, &mut data) != 0 {
-                continue;
-            }
-            for &sensor_idx in POWER_SENSOR_CANDIDATES {
-                let [value, supported] = data.ul_values[sensor_idx];
-                if supported != 0 {
-                    let watts = value as f64;
-                    if watts >= MIN_PLAUSIBLE_W && watts <= MAX_PLAUSIBLE_W {
-                        total_power += watts;
-                        found = true;
-                        break; // Use first valid power sensor per adapter
+            if pmlog_get(context, idx, &mut data) != 0 { continue; }
+
+            if do_full_scan && idx == 0 {
+                eprintln!("[Kairos:ADL] Full sensor scan for adapter 0:");
+                for s in 0..MAX_SENSORS {
+                    let [v, sup] = data.ul_values[s];
+                    if v > 0 {
+                        eprintln!("  [{}] value={} supported={}", s, v, sup);
                     }
+                }
+            }
+
+            for &(sensor_idx, min_w, max_w, label) in power_sensors {
+                let [value, _] = data.ul_values[sensor_idx];
+                if value >= min_w && value <= max_w {
+                    eprintln!("[Kairos:ADL] Adapter {} sensor[{}]={} = {}W", idx, sensor_idx, label, value);
+                    result_watts = Some(value as f64);
+                    break 'outer;
                 }
             }
         }
 
         destroy(context);
-
-        if found { Some(total_power) } else { None }
+        result_watts
     }
 }
+
 
 /// Try AMD GPU power via WMI (fallback when ADL unavailable).
 #[cfg(target_os = "windows")]
 fn read_amd_gpu_power_wmi() -> Option<f64> {
     use serde::Deserialize;
+    use std::collections::HashMap;
 
     // Strategy A: LibreHardwareMonitor / OpenHardwareMonitor WMI namespace
     let lhm_result = (|| -> Result<Option<f64>, Box<dyn std::error::Error>> {
@@ -271,13 +274,15 @@ fn read_amd_gpu_power_wmi() -> Option<f64> {
     })();
 
     if let Ok(Some(w)) = lhm_result {
+        eprintln!("[Kairos:WMI] LibreHardwareMonitor GPU power = {:.1}W", w);
         return Some(w);
     }
 
-    // Strategy B: WMI GPU Engine utilization → scale by realistic TDP
-    // RX 6700 XT TDP ~230W; use a conservative 200W max for mixed card support
+    // Strategy B: WMI GPU Engine utilization counters
+    // Fix: group by unique engine (LUID+engine#), SUM per-process utilizations per engine,
+    // then sum across all active engines. This avoids the bug of averaging 394 rows
+    // (most 0%) which always gives 0.0%.
     let wmi_result = (|| -> Result<Option<f64>, Box<dyn std::error::Error>> {
-        use std::collections::HashMap;
         let com_lib = COMLibrary::new()?;
         let wmi_conn = WMIConnection::new(com_lib)?;
 
@@ -287,29 +292,61 @@ fn read_amd_gpu_power_wmi() -> Option<f64> {
 
         if rows.is_empty() { return Ok(None); }
 
-        let util_keys = ["PercentUsage", "Utilization", "UtilizationPercentage"];
-        let mut total = 0.0f64;
-        let mut count = 0u32;
+        let util_keys = ["UtilizationPercentage", "PercentUsage", "Utilization"];
+
+        // Sum utilization per unique engine (luid + engine_number)
+        // Row name format: pid_XXX_luid_A_B_phys_0_eng_N_engtype_TYPE
+        let mut engine_sums: HashMap<String, f64> = HashMap::new();
 
         for row in &rows {
             let name = row.get("Name").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
             if !name.contains("3d") && !name.contains("compute") && !name.contains("copy") { continue; }
+
+            // Build unique engine key from LUID + engine number
+            let engine_key = {
+                let parts: Vec<&str> = name.split('_').collect();
+                let luid_pos  = parts.iter().position(|&p| p == "luid");
+                let eng_pos   = parts.iter().position(|&p| p == "eng");
+                match (luid_pos, eng_pos) {
+                    (Some(l), Some(e)) => format!("{}_{}_{}",
+                        parts.get(l+1).unwrap_or(&"?"),
+                        parts.get(l+2).unwrap_or(&"?"),
+                        parts.get(e+1).unwrap_or(&"?"),
+                    ),
+                    _ => name.clone(),
+                }
+            };
+
             for key in &util_keys {
                 if let Some(u) = row.get(*key).and_then(|v| v.as_f64()) {
-                    total += u.clamp(0.0, 100.0);
-                    count += 1;
+                    if u > 0.0 {
+                        eprintln!("[Kairos:WMI] engine='{}' {}={:.1}%", engine_key, key, u);
+                    }
+                    *engine_sums.entry(engine_key.clone()).or_insert(0.0) += u;
                     break;
                 }
             }
         }
 
-        if count > 0 {
-            let avg = total / count as f64;
-            // Scale: idle ~10W, full load ~200W (conservative for mixed GPU support)
-            Ok(Some(10.0 + (avg / 100.0) * 190.0))
-        } else {
-            Ok(None)
-        }
+        if engine_sums.is_empty() { return Ok(None); }
+
+        // Each engine's total utilization capped at 100%, then sum all engines
+        // (3D engines drive most GPU power; copy engines less so)
+        let total_util: f64 = engine_sums.values()
+            .map(|&v| v.min(100.0))
+            .sum::<f64>()
+            .min(200.0); // cap at 200% total (handles dual-engine setups)
+
+        // Normalize to 0-100% assuming max realistic sum is ~150% for heavy workloads
+        let normalized = (total_util / 150.0 * 100.0).min(100.0);
+
+        eprintln!("[Kairos:WMI] {} unique engines, sum_util={:.1}%, normalized={:.1}%",
+            engine_sums.len(), total_util, normalized);
+
+        // RX 6700 XT TDP ~230W; scale: idle=10W, full load=220W
+        let watts = 10.0 + (normalized / 100.0) * 210.0;
+        eprintln!("[Kairos:WMI] estimated GPU power = {:.1}W", watts);
+        Ok(Some(watts))
     })();
 
     wmi_result.ok().flatten()
