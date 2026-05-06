@@ -49,6 +49,7 @@ struct CurrentSession {
     is_youtube: bool,
     category_override: Option<String>,
     needs_review: bool,
+    db_id: Option<i64>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -1160,21 +1161,48 @@ pub fn run() {
                     if let Some(session) = &mut current_session {
                         if session.app_name != new_app_name {
                             changed = true;
-                        } else if let Some(window) = &active_window {
-                            if session.is_youtube && session.last_title != window.title {
-                                let time_spent = now - session.last_title_change;
-                                if time_spent < 60 {
-                                    session.short_view_count += 1;
-                                } else if session.short_view_count > 0 {
-                                    session.short_view_count -= 1;
+                        } else {
+                            if let Some(window) = &active_window {
+                                if session.last_title != window.title {
+                                    if session.is_youtube {
+                                        let time_spent = now - session.last_title_change;
+                                        if time_spent < 60 {
+                                            session.short_view_count += 1;
+                                        } else if session.short_view_count > 0 {
+                                            session.short_view_count -= 1;
+                                        }
+                                        
+                                        if session.short_view_count >= 3 {
+                                            session.category_override = Some("distracting".to_string());
+                                        }
+                                    }
+                                    session.last_title = window.title.clone();
+                                    session.last_title_change = now;
                                 }
-                                
-                                if session.short_view_count >= 3 {
-                                    session.category_override = Some("distracting".to_string());
+                            }
+
+                            // Periodically update DB so current session time is always visible
+                            let duration = now - session.start_time;
+                            if duration >= 5 {
+                                if session.is_youtube && session.category_override.is_none() && duration > 120 {
+                                    if session.app_name.ends_with("(YouTube)") {
+                                        session.category_override = Some("neutral".to_string());
+                                        session.needs_review = true;
+                                    }
                                 }
-                                
-                                session.last_title = window.title.clone();
-                                session.last_title_change = now;
+
+                                if let Some(id) = session.db_id {
+                                    let _ = conn.execute(
+                                        "UPDATE sessions SET end_time = ?1, window_title = ?2, category_override = ?3, needs_review = ?4 WHERE id = ?5",
+                                        params![now, session.last_title, session.category_override, session.needs_review, id],
+                                    );
+                                } else {
+                                    let _ = conn.execute(
+                                        "INSERT INTO sessions (app_name, start_time, end_time, window_title, category_override, needs_review) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                                        params![session.app_name, session.start_time, now, session.last_title, session.category_override, session.needs_review],
+                                    );
+                                    session.db_id = Some(conn.last_insert_rowid());
+                                }
                             }
                         }
                     } else if !new_app_name.is_empty() {
@@ -1192,10 +1220,17 @@ pub fn run() {
                                     }
                                 }
 
-                                let _ = conn.execute(
-                                    "INSERT INTO sessions (app_name, start_time, end_time, window_title, category_override, needs_review) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                                    params![session.app_name, session.start_time, now, session.last_title, session.category_override, session.needs_review],
-                                );
+                                if let Some(id) = session.db_id {
+                                    let _ = conn.execute(
+                                        "UPDATE sessions SET end_time = ?1, window_title = ?2, category_override = ?3, needs_review = ?4 WHERE id = ?5",
+                                        params![now, session.last_title, session.category_override, session.needs_review, id],
+                                    );
+                                } else {
+                                    let _ = conn.execute(
+                                        "INSERT INTO sessions (app_name, start_time, end_time, window_title, category_override, needs_review) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                                        params![session.app_name, session.start_time, now, session.last_title, session.category_override, session.needs_review],
+                                    );
+                                }
                             }
                         }
                         
@@ -1237,6 +1272,7 @@ pub fn run() {
                                 short_view_count: 0,
                                 category_override: None,
                                 needs_review: false,
+                                db_id: None,
                             });
                         } else {
                             current_session = None;
