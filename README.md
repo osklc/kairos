@@ -6,13 +6,13 @@
 
 **Know where your time goes. Take it back.**
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)](https://github.com/osklc/screen-time-tracker/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/osklc/screen-time-tracker/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows)](https://github.com/osklc/screen-time-tracker/releases)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-FFC131?style=flat-square&logo=tauri)](https://tauri.app)
 [![Rust](https://img.shields.io/badge/backend-Rust-CE422B?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-green?style=flat-square)](LICENSE)
 
-[**⬇ Download for Windows**](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_0.1.0_x64-setup.exe)&nbsp;&nbsp;·&nbsp;&nbsp;[Releases](https://github.com/osklc/screen-time-tracker/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/screen-time-tracker/issues)
+[**⬇ Download for Windows**](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_1.0.0_x64-setup.exe)&nbsp;&nbsp;·&nbsp;&nbsp;[Releases](https://github.com/osklc/screen-time-tracker/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/screen-time-tracker/issues)
 
 </div>
 
@@ -26,7 +26,33 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 
 > Named after the ancient Greek concept of the *right moment* — Kairos is the qualitative counterpart to Chronos. Not just *how much* time passes, but *how well* you use it.
 
+## Contents
+
+- [What is Kairos?](#what-is-kairos)
+- [✨ Features](#-features)
+- [📸 Screenshots](#-screenshots)
+    - [🏠 Overview](#-overview)
+    - [🔔 Smart App Categorisation](#-smart-app-categorisation)
+    - [📱 App Usage](#-app-usage)
+    - [📊 Daily Charts](#-daily-charts)
+    - [⚡ Electricity Usage](#-electricity-usage)
+    - [🍅 Pomodoro Timer](#-pomodoro-timer)
+    - [🎵 Focus Sounds](#-focus-sounds)
+    - [🎨 Themes](#-themes)
+- [🎬 Demo Video](#-demo-video)
+- [🏗️ Architecture](#-architecture)
+    - [Key Design Decisions](#key-design-decisions)
+    - [Tech Stack](#tech-stack)
+- [⚙️ Installation](#-installation)
+    - [Option 1 — Download the Installer (Recommended)](#option-1--download-the-installer-recommended)
+    - [Option 2 — Build from Source](#option-2--build-from-source)
+- [🛠️ Configuration](#-configuration)
+- [🗺️ Roadmap](#-roadmap)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
 ---
+
 
 ## ✨ Features
 
@@ -185,7 +211,7 @@ Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS fron
 3. Run the installer — Windows SmartScreen may warn you since the binary is unsigned; click **More info → Run anyway**.
 4. Kairos starts tracking immediately and appears in your system tray.
 
-> **[⬇ Download latest release](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_0.1.0_x64-setup.exe)**
+> **[⬇ Download latest release](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_1.0.0_x64-setup.exe)**
 
 ---
 
