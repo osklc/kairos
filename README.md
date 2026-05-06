@@ -18,14 +18,6 @@
 
 ---
 
-## What is Kairos?
-
-Kairos is a **lightweight, privacy-first screen time tracker** for Windows that runs silently in your system tray and tells you exactly where your attention went throughout the day — broken down by app, website, and category.
-
-Unlike cloud-based alternatives, **all data stays on your machine** in a local SQLite database. There are no subscriptions, no accounts, and no telemetry. Kairos also goes beyond simple time tracking by integrating a **Pomodoro timer**, **ambient focus sounds**, a **to-do list**, and a **live electricity usage monitor** so you can see the environmental and financial cost of your screen time.
-
-> Named after the ancient Greek concept of the *right moment* — Kairos is the qualitative counterpart to Chronos. Not just *how much* time passes, but *how well* you use it.
-
 ## Contents
 
 - [What is Kairos?](#what-is-kairos)
@@ -50,6 +42,12 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 - [🗺️ Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
+
+## What is Kairos?
+
+Kairos is a **lightweight, privacy-first screen time tracker** for Windows that runs silently in your system tray and tells you exactly where your attention went throughout the day — broken down by app, website, and category.
+
+Unlike cloud-based alternatives, **all data stays on your machine** in a local SQLite database. There are no subscriptions, no accounts, and no telemetry. Kairos also goes beyond simple time tracking by integrating a **Pomodoro timer**, **ambient focus sounds**, a **to-do list**, and a **live electricity usage monitor** so you can see the environmental and financial cost of your screen time.
 
 ---
 
