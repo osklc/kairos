@@ -92,14 +92,14 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ### 📱 Uygulama Kullanımı
 > Gün içinde kullanılan her uygulamanın listesi, harcanan süre ve renk kodlu kategori etiketi.
 
-<img src="docs/screenshots/app-usage.png" alt="Uygulama kullanım listesi" width="760"/>
+<img src="docs/screenshots/app-usage.png" alt="App usage list" width="760"/>
 
 ---
 
 ### 📊 Günlük Grafikler
 > Üç grafik bir arada: 7‑günlük çubuk ekran süresi, günlük enerji tüketimi ve bugünün üretken/dikkat dağıtıcı/nötr zaman dağılımı.
 
-<img src="docs/screenshots/daily-charts.png" alt="Günlük grafikler" width="760"/>
+<img src="docs/screenshots/daily-charts.png" alt="Daily charts" width="760"/>
 
 ---
 
@@ -127,7 +127,7 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ### ✅ Yapılacaklar Listesi
 > Görevlerinizi yerel olarak saklayan yerleşik bir liste ile gününüzü düzenleyin.
 
-<img src="docs/screenshots/to-do.png" alt="Yapılacaklar listesi" width="760"/>
+<img src="docs/screenshots/to-do.png" alt="To-do list" width="760"/>
 
 ---
 
