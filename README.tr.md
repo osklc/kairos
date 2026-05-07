@@ -262,7 +262,7 @@ Kairos **ADL2** arayüzü (`atiadlxx.dll`) üzerinden AMD GPU gücünü okur. Ra
 Tüm ayarlar uygulamanın veri dizininde saklanır:
 
 ```
-%APPDATA%\\com.osman.kairos\\
+%APPDATA%\\com.osklc.kairos\\
   tracker.db       ← SQLite veritabanı (oturumlar, kategoriler, ayarlar)
 ```
 

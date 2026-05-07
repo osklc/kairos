@@ -265,7 +265,7 @@ Kairos reads AMD GPU power via the **ADL2** interface (`atiadlxx.dll`), which sh
 All settings are stored in the application's data directory:
 
 ```
-%APPDATA%\com.osman.kairos\
+%APPDATA%\com.osklc.kairos\
   tracker.db       ← SQLite database (sessions, categories, settings)
 ```
 
