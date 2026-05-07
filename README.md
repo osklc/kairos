@@ -83,8 +83,8 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 ### 🔔 Smart App Categorisation
 > When Kairos detects an unknown application for the first time, it asks you to categorise it. Your choice is saved permanently and applied to all future sessions.
 
-<video src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" controls muted loop autoplay style="max-width: 100%; height: auto;">
-</video>
+<video src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
+
 ---
 
 ### 📱 App Usage
@@ -144,18 +144,18 @@ Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS fron
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Frontend (WebView)                    │
+│                    Frontend (WebView)                   │
 │  HTML · Vanilla CSS · Vanilla JS · Chart.js · i18n.json │
-└────────────────────┬──────────────────────────┬──────────┘
+└────────────────────┬───────────────────────────┬────────┘
                      │ invoke()                  │ listen()
-                     ▼                           │
+                     ▼                           ▼
 ┌─────────────────────────────────────────────────────────┐
-│                   Tauri IPC Layer                        │
+│                   Tauri IPC Layer                       │
 └───────────────────┬─────────────────────────────────────┘
                     │
 ┌───────────────────▼─────────────────────────────────────┐
-│                   Rust Backend                           │
-│                                                          │
+│                   Rust Backend                          │
+│                                                         │
 │  ┌──────────────────┐   ┌──────────────────────────┐    │
 │  │  Window Tracker  │   │   Power Monitor Thread   │    │
 │  │  Thread (1s poll)│   │   (10s poll)             │    │
@@ -163,15 +163,15 @@ Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS fron
 │  │ active_win_pos_rs│   │ NVML (NVIDIA)            │    │
 │  │ normalize_app()  │   │ ADL2 / WMI (AMD)         │    │
 │  │ auto-categorise  │   │ Battery sensor (laptop)  │    │
-│  │                  │   │ CPU estimation (fallback) │    │
+│  │                  │   │ CPU estimation (fallback)│    │
 │  └────────┬─────────┘   └───────────┬──────────────┘    │
-│           │ emit events              │ emit events        │
-│           │ write sessions           │                    │
-│           ▼                          ▼                    │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │           SQLite Database (rusqlite bundled)     │    │
-│  │  sessions · app_categories · settings            │    │
-│  └──────────────────────────────────────────────────┘    │
+│           │ emit events             │ emit events       │
+│           │ write sessions          │                   │
+│           ▼                         ▼                   │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │           SQLite Database (rusqlite bundled)     │   │
+│  │  sessions · app_categories · settings            │   │
+│  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
