@@ -83,9 +83,7 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 ### 🔔 Smart App Categorisation
 > When Kairos detects an unknown application for the first time, it asks you to categorise it. Your choice is saved permanently and applied to all future sessions.
 
-<video controls muted loop width="760" title="Category modal">
-    <source src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" type="video/mp4">
-    Your browser does not support the video tag.
+<video src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" controls muted loop autoplay style="max-width: 100%; height: auto;">
 </video>
 
 ---
