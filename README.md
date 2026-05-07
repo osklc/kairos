@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/screenshots/hero.png" alt="Kairos: Screen Time Tracker" width="800"/>
+<img src="docs/screenshots/hero.jpeg" alt="Kairos: Screen Time Tracker" width="800"/>
 
 # Kairos: Screen Time Tracker
 
@@ -142,7 +142,7 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 > *(Coming soon — a 3-minute walkthrough of all features)*
 
 <!-- Replace the link below once the video is uploaded -->
-[![Watch the demo](docs/screenshots/hero.png)](https://github.com/osklc/screen-time-tracker/releases)
+[![Watch the demo](docs/screenshots/hero.jpeg)](https://github.com/osklc/screen-time-tracker/releases)
 
 ---
 
