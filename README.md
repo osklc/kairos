@@ -30,6 +30,7 @@
     - [⚡ Electricity Usage](#-electricity-usage)
     - [🍅 Pomodoro Timer](#-pomodoro-timer)
     - [🎵 Focus Sounds](#-focus-sounds)
+    - [✅ To-Do List](#-to-do-list)
     - [🎨 Themes](#-themes)
 - [🎬 Demo Video](#-demo-video)
 - [🏗️ Architecture](#-architecture)
@@ -104,28 +105,35 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 ### ⚡ Electricity Usage
 > Live system power draw updated every 10 seconds. Kairos automatically picks the most accurate source — battery telemetry on laptops, NVML/ADL sensor on desktops — and shows cumulative kWh consumed today.
 
-<img src="docs/screenshots/electricity.gif" alt="Electricity monitor" width="760"/>
+<video src="https://github.com/user-attachments/assets/b56aa050-e2e9-4450-bceb-989fe5a1b160" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
 ### 🍅 Pomodoro Timer
 > A clean circular countdown with automatic focus → short break → long break cycling. Today's completed sessions and total focus time are tracked automatically.
 
-<img src="docs/screenshots/pomodoro.gif" alt="Pomodoro timer" width="760"/>
+<video src="https://github.com/user-attachments/assets/6214010d-d962-4443-aad0-7a0174c980dd" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
 ### 🎵 Focus Sounds
 > Three layered ambient soundscapes — **Pluvia** (rain), **Silva** (forest), **Focus Static** (white noise) — each with independent volume control and a live canvas audio visualiser.
 
-<img src="docs/screenshots/focus-sounds.gif" alt="Focus sounds" width="760"/>
+<video src="https://github.com/user-attachments/assets/07b5f763-4c62-453d-93ca-83487076392c" controls loop autoplay style="max-width: 100%; height: auto;"></video>
+
+---
+
+### ✅ To-Do List
+> Keep your day organized with a built-in task list for quick reminders, follow-ups, and focus goals — all stored locally alongside your screen time data.
+
+<img src="docs/screenshots/to-do.png" alt="To-do list" width="760"/>
 
 ---
 
 ### 🎨 Themes
 > Switch instantly between 7 hand-crafted themes. Your selection persists across restarts.
 
-<img src="docs/screenshots/themes.gif" alt="Theme switcher" width="760"/>
+<video src="https://github.com/user-attachments/assets/7fc48e66-c60b-4fa8-942e-74cebece5c0a" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
