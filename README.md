@@ -83,7 +83,7 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 ### 🔔 Smart App Categorisation
 > When Kairos detects an unknown application for the first time, it asks you to categorise it. Your choice is saved permanently and applied to all future sessions.
 
-[https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828]
+(https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828)
 
 ---
 
