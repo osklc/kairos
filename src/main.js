@@ -1382,7 +1382,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (!soundKey || !SOUND_FILES[soundKey]) continue;
 
     const savedVolume = savedSoundSettings[soundKey]?.volume ?? 50;
-    const savedPlaying = savedSoundSettings[soundKey]?.playing ?? false;
 
     soundTracks[soundKey] = {
       audio: null,
@@ -1419,9 +1418,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     trackEl.classList.add("loading");
     loadSoundAudioFile(soundKey).then(() => {
       trackEl.classList.remove("loading");
-      if (savedPlaying) {
-        fadeInSound(soundKey);
-      }
     });
   }
 
