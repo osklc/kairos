@@ -149,17 +149,17 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 
 Kairos bir **Tauri 2** uygulamasıdır: Rust backend'i vanilla JS frontend'e sıfır gecikmeli IPC köprüsüyle sunar. Tek bir yerel ikili dosya ve gömülü WebView ile çalışır — Electron ya da Node.js yok.
 
-```text
+```
 ┌─────────────────────────────────────────────────────────┐
 │                    Frontend (WebView)                   │
 │  HTML · Vanilla CSS · Vanilla JS · Chart.js · i18n.json │
 └────────────────────┬───────────────────────────┬────────┘
-                      │ invoke()                  │ listen()
-                      ▼                           ▼
+                     │ invoke()                  │ listen()
+                     ▼                           ▼
 ┌─────────────────────────────────────────────────────────┐
 │                   Tauri IPC Layer                       │
 └───────────────────┬─────────────────────────────────────┘
-                     │
+                    │
 ┌───────────────────▼─────────────────────────────────────┐
 │                   Rust Backend                          │
 │                                                         │
@@ -167,10 +167,10 @@ Kairos bir **Tauri 2** uygulamasıdır: Rust backend'i vanilla JS frontend'e sı
 │  │  Window Tracker  │   │   Power Monitor Thread   │    │
 │  │  Thread (1s poll)│   │   (10s poll)             │    │
 │  │                  │   │                          │    │
-│  │ active_win_pos_rs│   │ NVML (NVIDIA)            │
-│  │ normalize_app()  │   │ ADL2 / WMI (AMD)         │
-│  │ auto-categorise  │   │ Battery sensor (laptop) │
-│  │                  │   │ CPU estimation (fallback)│
+│  │ active_win_pos_rs│   │ NVML (NVIDIA)            │    │
+│  │ normalize_app()  │   │ ADL2 / WMI (AMD)         │    │
+│  │ auto-categorise  │   │ Battery sensor (laptop)  │    │
+│  │                  │   │ CPU estimation (fallback)│    │
 │  └────────┬─────────┘   └───────────┬──────────────┘    │
 │           │ emit events             │ emit events       │
 │           │ write sessions          │                   │
@@ -271,7 +271,7 @@ Uygulama içindeki **Ayarlar** sayfasından yönetilir:
 | Ayar | Açıklama |
 |---|---|
 | **Tema** | 7 yerleşik temadan seçim |
-| **Dil** | English / Turkish |
+| **Dil** | English / Türkçe |
 | **Başlangıçta Çalıştır** | `tauri-plugin-autostart` ile Windows autostart’a kaydet |
 | **Kategori İstemlerini Devre Dışı Bırak** | "Yeni Uygulama Algılandı" modalını gizle |
 | **Uygulamaları Kategorize Et** | Takip edilen herhangi bir uygulamanın kategorisini manuel olarak değiştir |
