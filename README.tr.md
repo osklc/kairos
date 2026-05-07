@@ -14,7 +14,7 @@
 [![Rust](https://img.shields.io/badge/backend-Rust-CE422B?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-green?style=flat-square)](LICENSE)
 
-[**⬇ Windows için İndir**](https://github.com/osklc/kairos/releases/latest)&nbsp;&nbsp;[Releases](https://github.com/osklc/kairos/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/kairos/issues)
+[**⬇ Windows için İndir**](https://github.com/osklc/kairos/releases/latest)&nbsp;&nbsp;·&nbsp;&nbsp;[Releases](https://github.com/osklc/kairos/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/kairos/issues)
 
 ---
 
