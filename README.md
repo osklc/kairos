@@ -12,7 +12,7 @@
 [![Rust](https://img.shields.io/badge/backend-Rust-CE422B?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-green?style=flat-square)](LICENSE)
 
-[**⬇ Download for Windows**](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_1.0.0_x64-setup.exe)&nbsp;&nbsp;·&nbsp;&nbsp;[Releases](https://github.com/osklc/screen-time-tracker/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/screen-time-tracker/issues)
+[**⬇ Download for Windows**](https://github.com/osklc/kairos/releases/download/v0.1.0/Kairos_0.1.0_x64_en-US.msi)&nbsp;&nbsp;·&nbsp;&nbsp;[Releases](https://github.com/osklc/screen-time-tracker/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/screen-time-tracker/issues)
 
 </div>
 
@@ -217,7 +217,7 @@ Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS fron
 3. Run the installer — Windows SmartScreen may warn you since the binary is unsigned; click **More info → Run anyway**.
 4. Kairos starts tracking immediately and appears in your system tray.
 
-> **[⬇ Download latest release](https://github.com/osklc/screen-time-tracker/releases/latest/download/Kairos_1.0.0_x64-setup.exe)**
+> **[⬇ Download latest release](https://github.com/osklc/kairos/releases/download/v0.1.0/Kairos_0.1.0_x64_en-US.msi)**
 
 ---
 
