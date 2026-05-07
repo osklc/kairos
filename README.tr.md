@@ -85,7 +85,7 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ### 🔔 Akıllı Uygulama Sınıflandırması
 > Kairos bilinmeyen bir uygulamayı ilk gördüğünde sizi sınıflandırma yapmaya yönlendirir. Seçiminiz kalıcıdır ve sonraki oturumlarda uygulanır.
 
-<video src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" controls muted loop autoplay style="max-width: 100%; height: auto;"/>
+<video src="https://github.com/user-attachments/assets/1cb44252-4027-4bbb-abe2-e036ccc4b828" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
@@ -106,21 +106,21 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ### ⚡ Elektrik Tüketimi
 > Sistem güç tüketimi her 10 saniyede güncellenir. Kairos en doğru kaynağı seçer — laptoplarda batarya, masaüstlerinde NVML/ADL vb.
 
-<video src="https://github.com/user-attachments/assets/b56aa050-e2e9-4450-bceb-989fe5a1b160" controls muted loop autoplay style="max-width: 100%; height: auto;"/>
+<video src="https://github.com/user-attachments/assets/b56aa050-e2e9-4450-bceb-989fe5a1b160" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
 ### 🍅 Pomodoro Zamanlayıcı
 > Dairesel geri sayım, otomatik odak → kısa molalar → uzun molalar döngüsü. Tamamlanan oturumlar ve toplam odak süresi otomatik kaydedilir.
 
-<video src="https://github.com/user-attachments/assets/6214010d-d962-4443-aad0-7a0174c980dd" controls muted loop autoplay style="max-width: 100%; height: auto;"/>
+<video src="https://github.com/user-attachments/assets/6214010d-d962-4443-aad0-7a0174c980dd" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
 ### 🎵 Odak Sesleri
 > Üç katmanlı ortam sesleri — **Pluvia** (yağmur), **Silva** (orman), **Focus Static** (beyaz gürültü) — bağımsız ses kontrolü ve canlı kanvas ses görselleştirici.
 
-<video src="https://github.com/user-attachments/assets/07b5f763-4c62-453d-93ca-83487076392c" controls loop autoplay style="max-width: 100%; height: auto;"/>
+<video src="https://github.com/user-attachments/assets/07b5f763-4c62-453d-93ca-83487076392c" controls loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
@@ -134,7 +134,7 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ### 🎨 Temalar
 > 7 el yapımı tema arasında anında geçiş yapın. Seçiminiz yeniden başlatmalarda kalır.
 
-<video src="https://github.com/user-attachments/assets/7fc48e66-c60b-4fa8-942e-74cebece5c0a" controls muted loop autoplay style="max-width: 100%; height: auto;"/>
+<video src="https://github.com/user-attachments/assets/7fc48e66-c60b-4fa8-942e-74cebece5c0a" controls muted loop autoplay style="max-width: 100%; height: auto;"></video>
 
 ---
 
