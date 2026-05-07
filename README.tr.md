@@ -8,14 +8,13 @@
 
 **Zamanınızın nereye gittiğini bilin. Kontrolü geri kazanın.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/osklc/kairos/releases)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/osklc/kairos?label=version&style=flat-square&color=blue)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows)](https://github.com/osklc/kairos/releases)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-FFC131?style=flat-square&logo=tauri)](https://tauri.app)
 [![Rust](https://img.shields.io/badge/backend-Rust-CE422B?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-green?style=flat-square)](LICENSE)
 
-[**⬇ Windows için İndir**](https://github.com/osklc/kairos/releases/latest)
-[Releases](https://github.com/osklc/kairos/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/kairos/issues)
+[**⬇ Windows için İndir**](https://github.com/osklc/kairos/releases/latest)[Releases](https://github.com/osklc/kairos/releases)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/osklc/kairos/issues)
 
 ---
 
