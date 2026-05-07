@@ -214,6 +214,7 @@ Kairos bir **Tauri 2** uygulamasıdır: Rust backend'i vanilla JS frontend'e sı
 1. [**Releases**](https://github.com/osklc/kairos/releases/latest) sayfasına gidin.
 2. `Kairos_x.x.x_x64-setup.exe` dosyasını indirin.
 3. Kurucuyu çalıştırın — Windows SmartScreen, imzasız olduğundan uyarabilir; **Daha fazla bilgi → Yine de çalıştır** tıklayın.
+> **Windows Güvenliği Notu:** Bu bağımsız açık kaynak proje, ücretli bir sertifika ile dijital olarak imzalanmamıştır; bu nedenle Windows SmartScreen bir uyarı gösterebilir. **Daha fazla bilgi** ve **Yine de çalıştır** seçerek devam edebilirsiniz. Kod tamamen açık kaynaktır ve denetlemeniz mümkündür.
 4. Kairos anında izlemeye başlar ve sistem tepsinizde görünür.
 
 > **[⬇ En son sürümü indir](https://github.com/osklc/kairos/releases/download/v0.1.0/Kairos_0.1.0_x64_en-US.msi)**
