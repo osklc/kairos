@@ -187,7 +187,7 @@ Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS fron
 > **Note on Windows Security:** Since this is an independent open-source project and not digitally signed with a paid certificate, Windows SmartScreen may show a warning. You can proceed by clicking **More info** and **Run anyway**. The code is fully open‑source for your audit.
 4. Kairos starts tracking immediately and appears in your system tray.
 
-> **[⬇ Download latest release](https://github.com/osklc/kairos/releases/download/v0.1.0/Kairos_0.1.0_x64_en-US.msi)**
+> **[⬇ Download latest release](https://github.com/osklc/kairos/releases/download/v1.1.0/Kairos_1.1.0_x64_en-US.msi)**
 
 ---
 
@@ -250,7 +250,7 @@ You can manage everything from the **Settings** page inside the app:
 
 ## 🗺️ Roadmap
 
-- [ ] Auto-start: Runs silently in the background when the computer starts up.
+- [x] Auto-start: Runs silently in the background when the computer starts up.
 - [ ] Auto-update feature: Notifies the user when a new version is available and allows them to download it.
 - [ ] Export data to CSV/JSON format: Allows users to own and back up their own data.
 - [ ] Weekly and monthly summary reports: Enabling historical analysis of data.

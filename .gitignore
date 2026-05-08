@@ -47,3 +47,7 @@ Thumbs.db
 
 # Demo Data
 *.sql
+
+#Safe
+.key
+.key.pub
