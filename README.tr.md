@@ -184,7 +184,7 @@ Kairos bir **Tauri 2** uygulamasıdır: Rust backend'i vanilla JS frontend'e sı
 > **Windows Güvenliği Notu:** Bu bağımsız açık kaynak proje, ücretli bir sertifika ile dijital olarak imzalanmamıştır; bu nedenle Windows SmartScreen bir uyarı gösterebilir. **Daha fazla bilgi** ve **Yine de çalıştır** seçerek devam edebilirsiniz. Kod tamamen açık kaynaktır ve denetlemeniz mümkündür.
 4. Kairos anında izlemeye başlar ve sistem tepsinizde görünür.
 
-> **[⬇ En son sürümü indir](https://github.com/osklc/kairos/releases/download/v1.1.0/Kairos_1.1.0_x64_en-US.msi)**
+> **[⬇ En son sürümü indir](https://github.com/osklc/kairos/releases/download/v1.2.0/Kairos_1.2.0_x64_en-US.msi)**
 
 ---
 
@@ -248,7 +248,7 @@ Uygulama içindeki **Ayarlar** sayfasından yönetilir:
 ## 🗺️ Yol Haritası
 
 - [x] Bilgisayar açıldığında başlatma (Auto-start): Arka planda sessizce başlaması.
-- [ ] Auto update kontrolü: Yeni sürüm çıktığında kullanıcıya bildirim verme ve indirme imkanı.
+- [x] Auto update kontrolü: Yeni sürüm çıktığında kullanıcıya bildirim verme ve indirme imkanı.
 - [ ] Verileri CSV/JSON formatına aktarma: Kullanıcının kendi verisine sahip olması ve yedekleyebilmesi.
 - [ ] Haftalık ve aylık özet raporlar: Verilerin geçmişe dönük analiz edilebilmesi.
 - [ ] Memento Mori Widget: Günün bitimine kalan süreyi gösteren ince, şeffaf ve minimalist bir ilerleme çubuğu.
