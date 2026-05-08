@@ -1719,3 +1719,40 @@ function startVisualizer() {
 
   draw();
 }
+
+// ── Auto Updater ──
+
+async function initUpdater() {
+  try {
+    const newVersion = await invoke("check_update");
+    if (newVersion) {
+      const modal = document.getElementById("update-modal");
+      const versionSpan = document.getElementById("update-version");
+      if (modal && versionSpan) {
+        versionSpan.textContent = `v${newVersion}`;
+        modal.style.display = "flex";
+
+        document.getElementById("update-btn-install").addEventListener("click", async () => {
+          const btn = document.getElementById("update-btn-install");
+          btn.textContent = translate("update.installing") || "Installing...";
+          btn.disabled = true;
+          try {
+            await invoke("install_update");
+          } catch (e) {
+            console.error("Update failed:", e);
+            btn.textContent = "Failed";
+          }
+        });
+
+        document.getElementById("update-btn-skip").addEventListener("click", () => {
+          modal.style.display = "none";
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Failed to check for updates:", err);
+  }
+}
+
+// Run updater check
+setTimeout(initUpdater, 2000);

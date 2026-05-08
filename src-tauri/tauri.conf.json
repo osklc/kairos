@@ -21,6 +21,14 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/osklc/kairos/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCNUU4MDRFMEJBMThBMzAKUldRd2lxRUxUb0JleTYycmRrUldBNXFTWFJWb3dIZnMyYlpBUmYyT29DQ2k5T2YxQ0ZFZWYzUWkK"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

@@ -31,6 +31,8 @@ battery = "0.7"
 nvml-wrapper = "0.10"
 tokio = { version = "1", features = ["time"] }
 libloading = "0.8"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-dialog = "2.7.1"
 
 [target.'cfg(windows)'.dependencies]
 wmi = "0.14"

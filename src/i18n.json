@@ -125,7 +125,11 @@
       "energy.sensitivityButton": "About Sensitivity",
       "energy.sourceBattery": "Source: Battery Sensor",
       "energy.sourceEstimation": "Source: Component Estimation",
-      "common.close": "Close"
+      "common.close": "Close",
+      "update.title": "Update Available",
+      "update.message": "A new version of Kairos is available:",
+      "update.install": "Install & Restart",
+      "update.skip": "Skip for now"
     },
     "tr": {
       "brand.title": "Kairos",
@@ -251,7 +255,11 @@
       "energy.sensitivityButton": "Duyarlılık Hakkında",
       "energy.sourceBattery": "Kaynak: Batarya Sensörü",
       "energy.sourceEstimation": "Kaynak: Bileşen Tahmini",
-      "common.close": "Kapat"
+      "common.close": "Kapat",
+      "update.title": "Güncelleme Mevcut",
+      "update.message": "Kairos'un yeni bir sürümü yayınlandı:",
+      "update.install": "Kur ve Yeniden Başlat",
+      "update.skip": "Şimdilik Geç"
     }
   }
 }
