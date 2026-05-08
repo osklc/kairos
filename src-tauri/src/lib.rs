@@ -1093,7 +1093,6 @@ async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> {
                 Ok(Some(update)) => {
                     update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
                     app_handle.restart();
-                    Ok(())
                 }
                 Ok(None) => Err("No update available".to_string()),
                 Err(e) => Err(e.to_string()),
@@ -1101,6 +1100,62 @@ async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> {
         }
         Err(e) => Err(e.to_string()),
     }
+}
+
+#[tauri::command]
+async fn export_data(app_handle: tauri::AppHandle, format: String) -> Result<String, String> {
+    use tauri::Manager;
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = rusqlite::Connection::open(db_path).map_err(|e| e.to_string())?;
+    
+    let mut stmt = conn.prepare("SELECT id, app_name, start_time, end_time, category FROM sessions").map_err(|e| e.to_string())?;
+    let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
+    
+    let mut output = String::new();
+    
+    if format == "csv" {
+        output.push_str("ID,App Name,Start Time,End Time,Category\n");
+        while let Some(row) = rows.next().map_err(|e| e.to_string())? {
+            let id: i64 = row.get(0).map_err(|e| e.to_string())?;
+            let app_name: String = row.get(1).map_err(|e| e.to_string())?;
+            let start_time: i64 = row.get(2).map_err(|e| e.to_string())?;
+            let end_time: Option<i64> = row.get(3).unwrap_or(None);
+            let category: String = row.get(4).unwrap_or_else(|_| "uncategorized".to_string());
+            
+            let safe_app_name = app_name.replace("\"", "\"\"");
+            let end_time_str = end_time.map(|v| v.to_string()).unwrap_or_default();
+            
+            output.push_str(&format!("{},\"{}\",{},{},{}\n", id, safe_app_name, start_time, end_time_str, category));
+        }
+    } else if format == "json" {
+        output.push_str("[\n");
+        let mut first = true;
+        while let Some(row) = rows.next().map_err(|e| e.to_string())? {
+            if !first {
+                output.push_str(",\n");
+            }
+            first = false;
+            let id: i64 = row.get(0).map_err(|e| e.to_string())?;
+            let app_name: String = row.get(1).map_err(|e| e.to_string())?;
+            let start_time: i64 = row.get(2).map_err(|e| e.to_string())?;
+            let end_time: Option<i64> = row.get(3).unwrap_or(None);
+            let category: String = row.get(4).unwrap_or_else(|_| "uncategorized".to_string());
+            
+            let obj = serde_json::json!({
+                "id": id,
+                "app_name": app_name,
+                "start_time": start_time,
+                "end_time": end_time,
+                "category": category,
+            });
+            output.push_str(&obj.to_string());
+        }
+        output.push_str("\n]");
+    } else {
+        return Err("Invalid format".to_string());
+    }
+    
+    Ok(output)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -1326,7 +1381,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update])
+        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update, export_data])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
