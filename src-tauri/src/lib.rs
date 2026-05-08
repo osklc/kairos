@@ -9,6 +9,7 @@ use std::time::Duration;
 use chrono::{Utc, Local, Timelike};
 use sysinfo::System;
 use tauri::{Emitter, Manager};
+use tauri_plugin_autostart::ManagerExt;
 use std::fs;
 
 #[cfg(target_os = "windows")]
@@ -1077,6 +1078,9 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle().clone();
             let power_state = app.state::<PowerMonitorState>().inner().clone();
+            
+            // Start automatically when the computer boots
+            let _ = app.autolaunch().enable();
             
             // ── System Tray ──
             let tray_handle = app.handle().clone();
