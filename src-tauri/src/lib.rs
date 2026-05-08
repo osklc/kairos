@@ -1103,50 +1103,67 @@ async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn export_data(app_handle: tauri::AppHandle, format: String) -> Result<String, String> {
+async fn export_data(app_handle: tauri::AppHandle, format: String) -> Result<Option<String>, String> {
     use tauri::Manager;
-    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
-    let conn = rusqlite::Connection::open(db_path).map_err(|e| e.to_string())?;
-    
-    let mut stmt = conn.prepare("SELECT id, app_name, start_time, end_time, category FROM sessions").map_err(|e| e.to_string())?;
-    let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
-    
+    use tauri_plugin_dialog::DialogExt;
+    use std::fs;
+
+    struct SessionData {
+        id: i64,
+        app_name: String,
+        start_time: i64,
+        end_time: Option<i64>,
+        category: String,
+    }
+
+    let sessions = {
+        let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+        let conn = rusqlite::Connection::open(db_path).map_err(|e| e.to_string())?;
+        
+        let mut stmt = conn.prepare(
+            "SELECT s.id, s.app_name, s.start_time, s.end_time, COALESCE(s.category_override, c.category, 'uncategorized') as category 
+             FROM sessions s
+             LEFT JOIN app_categories c ON s.app_name = c.app_name"
+        ).map_err(|e| e.to_string())?;
+        
+        let rows = stmt.query_map([], |row| {
+            Ok(SessionData {
+                id: row.get(0)?,
+                app_name: row.get(1)?,
+                start_time: row.get(2)?,
+                end_time: row.get(3)?,
+                category: row.get(4)?,
+            })
+        }).map_err(|e| e.to_string())?;
+
+        let mut data = Vec::new();
+        for row in rows {
+            data.push(row.map_err(|e| e.to_string())?);
+        }
+        data
+    }; // stmt, rows, and conn are dropped here
+
     let mut output = String::new();
     
     if format == "csv" {
         output.push_str("ID,App Name,Start Time,End Time,Category\n");
-        while let Some(row) = rows.next().map_err(|e| e.to_string())? {
-            let id: i64 = row.get(0).map_err(|e| e.to_string())?;
-            let app_name: String = row.get(1).map_err(|e| e.to_string())?;
-            let start_time: i64 = row.get(2).map_err(|e| e.to_string())?;
-            let end_time: Option<i64> = row.get(3).unwrap_or(None);
-            let category: String = row.get(4).unwrap_or_else(|_| "uncategorized".to_string());
-            
-            let safe_app_name = app_name.replace("\"", "\"\"");
-            let end_time_str = end_time.map(|v| v.to_string()).unwrap_or_default();
-            
-            output.push_str(&format!("{},\"{}\",{},{},{}\n", id, safe_app_name, start_time, end_time_str, category));
+        for s in sessions {
+            let safe_app_name = s.app_name.replace("\"", "\"\"");
+            let end_time_str = s.end_time.map(|v| v.to_string()).unwrap_or_default();
+            output.push_str(&format!("{},\"{}\",{},{},{}\n", s.id, safe_app_name, s.start_time, end_time_str, s.category));
         }
     } else if format == "json" {
         output.push_str("[\n");
-        let mut first = true;
-        while let Some(row) = rows.next().map_err(|e| e.to_string())? {
-            if !first {
+        for (i, s) in sessions.iter().enumerate() {
+            if i > 0 {
                 output.push_str(",\n");
             }
-            first = false;
-            let id: i64 = row.get(0).map_err(|e| e.to_string())?;
-            let app_name: String = row.get(1).map_err(|e| e.to_string())?;
-            let start_time: i64 = row.get(2).map_err(|e| e.to_string())?;
-            let end_time: Option<i64> = row.get(3).unwrap_or(None);
-            let category: String = row.get(4).unwrap_or_else(|_| "uncategorized".to_string());
-            
             let obj = serde_json::json!({
-                "id": id,
-                "app_name": app_name,
-                "start_time": start_time,
-                "end_time": end_time,
-                "category": category,
+                "id": s.id,
+                "app_name": s.app_name,
+                "start_time": s.start_time,
+                "end_time": s.end_time,
+                "category": s.category,
             });
             output.push_str(&obj.to_string());
         }
@@ -1154,8 +1171,32 @@ async fn export_data(app_handle: tauri::AppHandle, format: String) -> Result<Str
     } else {
         return Err("Invalid format".to_string());
     }
+
+    let file_name = format!("kairos_data_export_{}.{}", chrono::Local::now().format("%Y-%m-%d"), format);
     
-    Ok(output)
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app_handle
+        .dialog()
+        .file()
+        .set_file_name(file_name)
+        .add_filter(if format == "csv" { "CSV" } else { "JSON" }, &[&format])
+        .save_file(move |path| {
+            let _ = tx.send(path);
+        });
+
+    let file_path = rx.await.map_err(|e| e.to_string())?;
+
+    if let Some(path) = file_path {
+        if let Some(p) = path.as_path() {
+            let path_buf = p.to_path_buf();
+            fs::write(&path_buf, output).map_err(|e| e.to_string())?;
+            Ok(Some(path_buf.to_string_lossy().to_string()))
+        } else {
+            Err("Failed to resolve file path".to_string())
+        }
+    } else {
+        Ok(None)
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

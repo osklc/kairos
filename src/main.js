@@ -1761,27 +1761,11 @@ setTimeout(initUpdater, 2000);
 
 async function handleDataExport(format) {
   try {
-    const dataString = await invoke("export_data", { format });
-    const mimeType = format === "csv" ? "text/csv" : "application/json";
-    const blob = new Blob([dataString], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = url;
-    
-    // Format current date for filename
-    const now = new Date();
-    const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-    a.download = `kairos_data_export_${dateStr}.${format}`;
-    
-    document.body.appendChild(a);
-    a.click();
-    
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
+    const savedPath = await invoke("export_data", { format });
+    if (savedPath) {
+      const successMsg = translate("settings.exportSuccess") || "Data exported successfully to:";
+      alert(`${successMsg}\n${savedPath}`);
+    }
   } catch (err) {
     console.error("Export failed:", err);
     alert(translate("settings.exportFailed") || "Failed to export data.");
