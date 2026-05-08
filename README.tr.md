@@ -60,7 +60,7 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 |---|---|
 | 🪟 **Otomatik Uygulama Takibi** | Aktif pencereyi her saniye sessizce algılar — manuel giriş gerekmez |
 | 🧠 **Akıllı Sınıflandırma** | Uygulamaları Üretken, Nötr veya Dikkat Dağıtıcı olarak otomatik kategorize eder |
-| 🌐 **Tarayıcı Düzeyinde Ayrıntı** | `Chrome (GitHub)` ile `Chrome (YouTube Dikkat Dağıtıcı)` arasını ayırır |
+| 🌐 **Tarayıcı Düzeyinde Ayrıntı** | `Chrome (GitHub)` ile `Chrome (YouTube)` arasını ayırır |
 | ⚡ **Canlı Elektrik Monitörü** | GPU/CPU sensörlerinden veya batarya telemetriden gerçek zamanlı watt tüketimi |
 | 📊 **Günlük Grafikler** | 7‑günlük çubuk grafik, enerji tüketim grafiği ve kategori pasta grafiği |
 | 🍅 **Pomodoro Zamanlayıcı** | Animasyonlu daire, yapılandırılabilir aralıklar ve ara dinlenme takibi |
@@ -148,39 +148,6 @@ Bulut tabanlı rakiplerin aksine, **tüm veriler yerel SQLite veritabanında kal
 ## 🏗️ Mimari
 
 Kairos bir **Tauri 2** uygulamasıdır: Rust backend'i vanilla JS frontend'e sıfır gecikmeli IPC köprüsüyle sunar. Tek bir yerel ikili dosya ve gömülü WebView ile çalışır — Electron ya da Node.js yok.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (WebView)                   │
-│  HTML · Vanilla CSS · Vanilla JS · Chart.js · i18n.json │
-└────────────────────┬───────────────────────────┬────────┘
-                     │ invoke()                  │ listen()
-                     ▼                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Tauri IPC Layer                       │
-└───────────────────┬─────────────────────────────────────┘
-                    │
-┌───────────────────▼─────────────────────────────────────┐
-│                   Rust Backend                          │
-│                                                         │
-│  ┌──────────────────┐   ┌──────────────────────────┐    │
-│  │  Window Tracker  │   │   Power Monitor Thread   │    │
-│  │  Thread (1s poll)│   │   (10s poll)             │    │
-│  │                  │   │                          │    │
-│  │ active_win_pos_rs│   │ NVML (NVIDIA)            │    │
-│  │ normalize_app()  │   │ ADL2 / WMI (AMD)         │    │
-│  │ auto-categorise  │   │ Battery sensor (laptop)  │    │
-│  │                  │   │ CPU estimation (fallback)│    │
-│  └────────┬─────────┘   └───────────┬──────────────┘    │
-│           │ emit events             │ emit events       │
-│           │ write sessions          │                   │
-│           ▼                         ▼                   │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │           SQLite Database (rusqlite bundled)     │   │
-│  │  sessions · app_categories · settings            │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
 
 ### Temel Tasarım Kararları
 

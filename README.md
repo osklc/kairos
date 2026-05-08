@@ -61,7 +61,7 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 |---|---|
 | 🪟 **Automatic App Tracking** | Silently detects your active window every second — no manual input required |
 | 🧠 **Smart Classification** | Automatically categorises apps as Productive, Neutral, or Distracting |
-| 🌐 **Browser-Level Granularity** | Distinguishes `Chrome (GitHub)` from `Chrome (YouTube Distracting)` |
+| 🌐 **Browser-Level Granularity** | Distinguishes `Chrome (GitHub)` from `Chrome (YouTube)` |
 | ⚡ **Live Electricity Monitor** | Real-time system watt draw from GPU/CPU sensors or battery telemetry |
 | 📊 **Daily Charts** | 7-day screen time bar chart, energy consumption chart, and category pie chart |
 | 🍅 **Pomodoro Timer** | Built-in focus timer with animated ring, configurable intervals, and break tracking |
@@ -151,39 +151,6 @@ Unlike cloud-based alternatives, **all data stays on your machine** in a local S
 ## 🏗️ Architecture
 
 Kairos is a **Tauri 2** application: a Rust backend exposed to a Vanilla JS frontend over a zero-overhead IPC bridge. Everything runs as a single native binary with an embedded WebView — no Electron, no Node.js runtime.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (WebView)                   │
-│  HTML · Vanilla CSS · Vanilla JS · Chart.js · i18n.json │
-└────────────────────┬───────────────────────────┬────────┘
-                     │ invoke()                  │ listen()
-                     ▼                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Tauri IPC Layer                       │
-└───────────────────┬─────────────────────────────────────┘
-                    │
-┌───────────────────▼─────────────────────────────────────┐
-│                   Rust Backend                          │
-│                                                         │
-│  ┌──────────────────┐   ┌──────────────────────────┐    │
-│  │  Window Tracker  │   │   Power Monitor Thread   │    │
-│  │  Thread (1s poll)│   │   (10s poll)             │    │
-│  │                  │   │                          │    │
-│  │ active_win_pos_rs│   │ NVML (NVIDIA)            │    │
-│  │ normalize_app()  │   │ ADL2 / WMI (AMD)         │    │
-│  │ auto-categorise  │   │ Battery sensor (laptop)  │    │
-│  │                  │   │ CPU estimation (fallback)│    │
-│  └────────┬─────────┘   └───────────┬──────────────┘    │
-│           │ emit events             │ emit events       │
-│           │ write sessions          │                   │
-│           ▼                         ▼                   │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │           SQLite Database (rusqlite bundled)     │   │
-│  │  sessions · app_categories · settings            │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
 
 ### Key Design Decisions
 
