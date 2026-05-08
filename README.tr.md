@@ -280,12 +280,11 @@ Uygulama içindeki **Ayarlar** sayfasından yönetilir:
 
 ## 🗺️ Yol Haritası
 
-- [ ] Haftalık ve aylık özet raporlar
-- [ ] CSV / JSON veri dışa aktarımı
-- [ ] Günlük ekran süresi hedefi ve hatırlatmalar
-- [ ] Uygulama zaman limitleri ve yumuşak uyarılar
-- [ ] macOS ve Linux desteği
-- [ ] Özel kategori kuralları için Plugin API
+- [ ] Bilgisayar açıldığında başlatma (Auto-start): Arka planda sessizce başlaması.
+- [ ] Auto update kontrolü: Yeni sürüm çıktığında kullanıcıya bildirim verme ve indirme imkanı.
+- [ ] Verileri CSV/JSON formatına aktarma: Kullanıcının kendi verisine sahip olması ve yedekleyebilmesi.
+- [ ] Haftalık ve aylık özet raporlar: Verilerin geçmişe dönük analiz edilebilmesi.
+- [ ] Memento Mori Widget: Günün bitimine kalan süreyi gösteren ince, şeffaf ve minimalist bir ilerleme çubuğu.
 
 ---
 
@@ -293,7 +292,7 @@ Uygulama içindeki **Ayarlar** sayfasından yönetilir:
 
 Pull request’ler memnuniyetle karşılanır. Büyük değişiklikler öncesinde bir issue açarak neyi değiştirmek istediğinizi tartışın.
 
-1. Depoyu fork’layın
+1. Depoyu forklayın
 2. Özellik dalı oluşturun (`git checkout -b feature/harika-özellik`)
 3. Değişiklikleri commit edin (`git commit -m 'feat: harika özellik eklendi'`)
 4. Dalı pushlayın (`git push origin feature/harika-özellik`)

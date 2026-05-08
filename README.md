@@ -283,12 +283,11 @@ You can manage everything from the **Settings** page inside the app:
 
 ## 🗺️ Roadmap
 
-- [ ] Weekly and monthly aggregated reports
-- [ ] Export data to CSV / JSON
-- [ ] Customisable daily screen-time goal with notifications
-- [ ] Per-app time limits with soft alerts
-- [ ] macOS and Linux support
-- [ ] Plugin API for custom category rules
+- [ ] Auto-start: Runs silently in the background when the computer starts up.
+- [ ] Auto-update feature: Notifies the user when a new version is available and allows them to download it.
+- [ ] Export data to CSV/JSON format: Allows users to own and back up their own data.
+- [ ] Weekly and monthly summary reports: Enabling historical analysis of data.
+- [ ] Memento Mori Widget: A sleek, transparent, and minimalist progress bar showing the time remaining until the end of the day.
 
 ---
 
