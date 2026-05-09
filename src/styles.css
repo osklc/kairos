@@ -30,11 +30,11 @@
   --pomo-focus: #8C7851;
   --pomo-break: #8B4513;
   --pomo-pause: #736242;
-  
+
   --s-radius: 4px;
   --s-transition: 250ms ease;
 
-  
+
   /* Sound variables */
   --s-bg-card: #E2E2D9;
   --s-bg-card-hover: #D9D9D0;
@@ -311,11 +311,21 @@ body[data-theme="forest"] {
   box-sizing: border-box;
 }
 
-h1, h2 {
+h1,
+h2 {
   font-family: 'Cinzel', serif;
 }
 
-h3, .stat-value, .pomo-stat-value, .pomo-time-display, .app-usage-list, table, .card p, #stat-total-time, #stat-productive-time, #stat-distracting-time {
+h3,
+.stat-value,
+.pomo-stat-value,
+.pomo-time-display,
+.app-usage-list,
+table,
+.card p,
+#stat-total-time,
+#stat-productive-time,
+#stat-distracting-time {
   font-family: 'Inter', sans-serif;
 }
 
@@ -463,6 +473,28 @@ body {
 }
 
 .sidebar.collapsed .nav-group-items {
+  display: none;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--sidebar-btn-border);
+  opacity: 0.5;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-footer:hover {
+  opacity: 1;
+}
+
+.version-text {
+  font-size: 0.7rem;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.sidebar.collapsed .sidebar-footer {
   display: none;
 }
 
@@ -776,8 +808,8 @@ button {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent);
 }
 
-.energy-info-card > div,
-.source-grid > div {
+.energy-info-card>div,
+.source-grid>div {
   display: grid;
   gap: 4px;
 }
