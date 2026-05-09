@@ -649,7 +649,7 @@ fn normalize_app_name(raw_name: &str, title: &str) -> String {
         return "OneNote".to_string();
     } else if raw_lower.contains("acrobat") || raw_lower.contains("reader") || title_lower.contains(".pdf") {
         return "Adobe Acrobat".to_string();
-    } else if raw_lower.contains("kairos") || raw_lower.contains("screen-time-tracker") {
+    } else if raw_lower.contains("kairos") {
         return "Kairos".to_string();
     } else if raw_lower.contains("searchhost") {
         return "Windows Search".to_string();

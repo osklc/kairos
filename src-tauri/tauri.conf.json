@@ -12,9 +12,9 @@
       {
         "title": "Kairos: Screen Time Tracker",
         "width": 800,
-        "height": 600,
+        "height": 610,
         "minWidth": 800,
-        "minHeight": 600
+        "minHeight": 610
       }
     ],
     "security": {
