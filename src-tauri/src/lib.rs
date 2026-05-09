@@ -1003,6 +1003,66 @@ fn get_daily_stats(app_handle: tauri::AppHandle) -> Result<Vec<DailyStat>, Strin
 }
 
 #[tauri::command]
+fn get_weekly_stats(app_handle: tauri::AppHandle) -> Result<Vec<DailyStat>, String> {
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
+
+    let mut stmt = conn.prepare(
+        "SELECT strftime('%Y-%W', datetime(start_time, 'unixepoch', 'localtime')) as week, 
+         SUM(end_time - start_time) as total_duration 
+         FROM sessions 
+         GROUP BY week 
+         ORDER BY week ASC 
+         LIMIT 12"
+    ).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(DailyStat {
+            day: row.get(0)?,
+            total_seconds: row.get(1)?,
+        })
+    }).map_err(|e| e.to_string())?;
+
+    let mut stats = Vec::new();
+    for row in rows {
+        if let Ok(stat) = row {
+            stats.push(stat);
+        }
+    }
+    Ok(stats)
+}
+
+#[tauri::command]
+fn get_monthly_stats(app_handle: tauri::AppHandle) -> Result<Vec<DailyStat>, String> {
+    let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
+
+    let mut stmt = conn.prepare(
+        "SELECT strftime('%Y-%m', datetime(start_time, 'unixepoch', 'localtime')) as month, 
+         SUM(end_time - start_time) as total_duration 
+         FROM sessions 
+         GROUP BY month 
+         ORDER BY month ASC 
+         LIMIT 12"
+    ).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(DailyStat {
+            day: row.get(0)?,
+            total_seconds: row.get(1)?,
+        })
+    }).map_err(|e| e.to_string())?;
+
+    let mut stats = Vec::new();
+    for row in rows {
+        if let Ok(stat) = row {
+            stats.push(stat);
+        }
+    }
+    Ok(stats)
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
@@ -1422,7 +1482,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update, export_data])
+        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_weekly_stats, get_monthly_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update, export_data])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

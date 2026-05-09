@@ -208,12 +208,21 @@ let dailyEnergyTotalChart = null;
 let dailyPieChart = null;
 let lastDailyStatsJson = "";
 
+let currentChartPeriod = "daily";
+
 async function fetchAndRenderDailyStats() {
   const canvas = document.getElementById("daily-chart");
   if (!canvas) return;
 
   try {
-    const stats = await invoke("get_daily_stats");
+    let stats;
+    if (currentChartPeriod === "weekly") {
+      stats = await invoke("get_weekly_stats");
+    } else if (currentChartPeriod === "monthly") {
+      stats = await invoke("get_monthly_stats");
+    } else {
+      stats = await invoke("get_daily_stats");
+    }
     const statsJson = JSON.stringify(stats);
 
     const labels = stats.map(s => s.day);
@@ -224,6 +233,16 @@ async function fetchAndRenderDailyStats() {
     const chartBorderColor = computedStyle.getPropertyValue('--accent-color').trim() || 'rgba(78, 158, 229, 1)';
     const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
     const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
+
+    const emptyDiv = document.getElementById("daily-chart-empty");
+    if (!data || data.length === 0 || data.every(v => v === 0)) {
+      canvas.style.display = "none";
+      if (emptyDiv) emptyDiv.style.display = "flex";
+      return;
+    } else {
+      canvas.style.display = "block";
+      if (emptyDiv) emptyDiv.style.display = "none";
+    }
 
     // Always recreate chart to ensure colors update with theme
     if (dailyChart) {
@@ -325,6 +344,16 @@ function renderDailyEnergyTotalChart() {
     const chartTextColor = computedStyle.getPropertyValue('--chart-text-color').trim() || '#000000';
     const chartGridColor = computedStyle.getPropertyValue('--chart-grid-color').trim() || 'rgba(0,0,0,0.1)';
 
+    const emptyDiv = document.getElementById("daily-energy-empty");
+    if (!data || data.length === 0 || data.every(v => v === 0)) {
+      canvas.style.display = "none";
+      if (emptyDiv) emptyDiv.style.display = "flex";
+      return;
+    } else {
+      canvas.style.display = "block";
+      if (emptyDiv) emptyDiv.style.display = "none";
+    }
+
     if (dailyEnergyTotalChart) {
       dailyEnergyTotalChart.destroy();
       dailyEnergyTotalChart = null;
@@ -407,6 +436,16 @@ async function renderDailyPieChart() {
       'rgba(244, 67, 54, 0.7)',     // Red for distracting
       'rgba(158, 158, 158, 0.7)'    // Gray for neutral
     ];
+
+    const emptyDiv = document.getElementById("daily-pie-empty");
+    if (totalSeconds === 0) {
+      canvas.style.display = "none";
+      if (emptyDiv) emptyDiv.style.display = "flex";
+      return;
+    } else {
+      canvas.style.display = "block";
+      if (emptyDiv) emptyDiv.style.display = "none";
+    }
 
     if (dailyPieChart) {
       dailyPieChart.destroy();
@@ -640,7 +679,7 @@ function getEnergyWindowSeconds(mode = energyState.mode) {
 }
 
 function renderEnergyModeButtons() {
-  document.querySelectorAll(".energy-mode-btn").forEach((button) => {
+  document.querySelectorAll(".energy-mode-btn[data-energy-mode]").forEach((button) => {
     const mode = button.getAttribute("data-energy-mode");
     const isActive = mode === energyState.mode;
     button.classList.toggle("active", isActive);
@@ -1774,3 +1813,21 @@ async function handleDataExport(format) {
 
 document.getElementById("export-csv-btn")?.addEventListener("click", () => handleDataExport("csv"));
 document.getElementById("export-json-btn")?.addEventListener("click", () => handleDataExport("json"));
+
+document.querySelectorAll(".chart-period-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    // Remove active class from all
+    document.querySelectorAll(".chart-period-btn").forEach(b => {
+      b.classList.remove("active");
+      b.setAttribute("aria-pressed", "false");
+    });
+    // Add active to clicked
+    const target = e.target;
+    target.classList.add("active");
+    target.setAttribute("aria-pressed", "true");
+    
+    // Update period and fetch
+    currentChartPeriod = target.getAttribute("data-chart-period") || "daily";
+    fetchAndRenderDailyStats();
+  });
+});

@@ -39,6 +39,9 @@
       "daily.productive": "Productive",
       "daily.distracting": "Distracting",
       "daily.neutral": "Neutral",
+      "daily.tabDaily": "Daily",
+      "daily.tabWeekly": "Weekly",
+      "daily.tabMonthly": "Monthly",
 
       "todo.title": "To-Do List",
       "todo.placeholder": "Add a new task...",
@@ -134,7 +137,8 @@
       "update.title": "Update Available",
       "update.message": "A new version of Kairos is available:",
       "update.install": "Install & Restart",
-      "update.skip": "Skip for now"
+      "update.skip": "Skip for now",
+      "chart.noData": "Loading data or not enough data to display..."
     },
     "tr": {
       "brand.title": "Kairos",
@@ -174,6 +178,9 @@
       "daily.productive": "Üretken",
       "daily.distracting": "Dikkat Dağıtıcı",
       "daily.neutral": "Nötr",
+      "daily.tabDaily": "Günlük",
+      "daily.tabWeekly": "Haftalık",
+      "daily.tabMonthly": "Aylık",
 
       "todo.title": "Yapılacaklar",
       "todo.placeholder": "Yeni görev ekle...",
@@ -269,7 +276,8 @@
       "update.title": "Güncelleme Mevcut",
       "update.message": "Kairos'un yeni bir sürümü yayınlandı:",
       "update.install": "Kur ve Yeniden Başlat",
-      "update.skip": "Şimdilik Geç"
+      "update.skip": "Şimdilik Geç",
+      "chart.noData": "Veriler yükleniyor veya gösterilecek yeterli veri yok..."
     }
   }
 }

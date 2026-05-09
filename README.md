@@ -253,7 +253,7 @@ You can manage everything from the **Settings** page inside the app:
 - [x] Auto-start: Runs silently in the background when the computer starts up.
 - [x] Auto-update feature: Notifies the user when a new version is available and allows them to download it.
 - [x] Export data to CSV/JSON format: Allows users to own and back up their own data.
-- [ ] Weekly and monthly summary reports: Enabling historical analysis of data.
+- [x] Weekly and monthly summary reports: Enabling historical analysis of data.
 - [ ] Memento Mori Widget: A sleek, transparent, and minimalist progress bar showing the time remaining until the end of the day.
 
 ---
