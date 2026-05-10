@@ -4,8 +4,9 @@
   "version": "1.3.3",
   "identifier": "com.osklc.kairos",
   "build": {
-    "frontendDist": "../src",
-    "devUrl": "../src"
+    "beforeDevCommand": "npm run dev-server",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../src"
   },
   "app": {
     "withGlobalTauri": true,
