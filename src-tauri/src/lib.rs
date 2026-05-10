@@ -354,6 +354,11 @@ fn detect_amd_gpu() -> Option<String> {
 }
 
 #[cfg(not(target_os = "windows"))]
+fn read_amd_gpu_power_adl() -> Option<f64> {
+    None
+}
+
+#[cfg(not(target_os = "windows"))]
 fn read_amd_gpu_power_wmi() -> Option<f64> {
     None
 }
