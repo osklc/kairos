@@ -142,7 +142,7 @@
         </button>
       </nav>
       <div class="sidebar-footer">
-        <span class="version-text">v1.3.2</span>
+        <span class="version-text">v1.3.3</span>
       </div>
     </aside>
 
@@ -266,17 +266,23 @@
       <section class="page" id="page-daily" aria-label="Daily charts page">
         <div class="charts-grid">
           <article class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
               <h3 data-i18n="daily.title" style="margin: 0;">Daily Screen Time</h3>
               <div class="energy-segmented" role="tablist">
-                <button type="button" class="energy-mode-btn chart-period-btn active" data-chart-period="daily" data-i18n="daily.tabDaily" style="min-width: 80px;">Daily</button>
-                <button type="button" class="energy-mode-btn chart-period-btn" data-chart-period="weekly" data-i18n="daily.tabWeekly" style="min-width: 80px;">Weekly</button>
-                <button type="button" class="energy-mode-btn chart-period-btn" data-chart-period="monthly" data-i18n="daily.tabMonthly" style="min-width: 80px;">Monthly</button>
+                <button type="button" class="energy-mode-btn chart-period-btn active" data-chart-period="daily"
+                  data-i18n="daily.tabDaily" style="min-width: 80px;">Daily</button>
+                <button type="button" class="energy-mode-btn chart-period-btn" data-chart-period="weekly"
+                  data-i18n="daily.tabWeekly" style="min-width: 80px;">Weekly</button>
+                <button type="button" class="energy-mode-btn chart-period-btn" data-chart-period="monthly"
+                  data-i18n="daily.tabMonthly" style="min-width: 80px;">Monthly</button>
               </div>
             </div>
             <div class="chart-container" style="position: relative; height:30vh; width:100%">
               <canvas id="daily-chart"></canvas>
-              <div id="daily-chart-empty" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;" data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
+              <div id="daily-chart-empty"
+                style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;"
+                data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
             </div>
           </article>
 
@@ -284,7 +290,9 @@
             <h3 data-i18n="daily.energyTotalTitle">Daily Total Energy Consumption</h3>
             <div class="chart-container" style="position: relative; height:30vh; width:100%">
               <canvas id="daily-energy-total-chart"></canvas>
-              <div id="daily-energy-empty" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;" data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
+              <div id="daily-energy-empty"
+                style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;"
+                data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
             </div>
           </article>
 
@@ -292,7 +300,9 @@
             <h3 data-i18n="daily.categoryBreakdown">Time Distribution by Category</h3>
             <div class="chart-container" style="position: relative; height:30vh; width:100%">
               <canvas id="daily-pie-chart"></canvas>
-              <div id="daily-pie-empty" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;" data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
+              <div id="daily-pie-empty"
+                style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); font-style: italic; text-align: center; padding: 20px;"
+                data-i18n="chart.noData">Veriler yükleniyor veya gösterilecek yeterli veri yok...</div>
             </div>
           </article>
         </div>
