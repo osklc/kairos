@@ -53,7 +53,7 @@ function applyTranslations() {
 
 async function loadTranslations() {
   try {
-    const response = await fetch("/i18n.json");
+    const response = await fetch("i18n.json");
     if (!response.ok) return null;
 
     const i18nConfig = await response.json();
@@ -1284,7 +1284,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       checkbox.addEventListener("change", () => {
         todos[index].completed = checkbox.checked;
         if (checkbox.checked) {
-          const audio = new Audio("/assets/sound-effect/mixkit-quick-win-video-game-notification-269.wav");
+          const audio = new Audio("assets/sound-effect/mixkit-quick-win-video-game-notification-269.wav");
           audio.volume = 0.5;
           audio.play().catch(e => console.error("Sound play failed:", e));
         }

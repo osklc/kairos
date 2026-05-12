@@ -1326,13 +1326,12 @@ pub fn run() {
                     }
                 }
             });
-            
-            let conn = init_db(&app_handle).expect("Failed to initialize DB");
 
             // Emit normalized power telemetry every 10 seconds while main window is visible.
             spawn_power_emitter(app_handle.clone(), power_state);
-            
+
             std::thread::spawn(move || {
+                let conn = init_db(&app_handle).expect("Failed to initialize DB");
                 let mut current_session: Option<CurrentSession> = None;
                 
                 loop {
