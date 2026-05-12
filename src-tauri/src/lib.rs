@@ -1451,10 +1451,6 @@ pub fn run() {
                                     auto_category = "productive";
                                 } else if name_lower.contains("(distracting)") || name_lower.contains("(twitch)") || name_lower.contains("(youtube shorts)") || name_lower.contains("(youtube distracting)") || name_lower.contains("spotify") || name_lower.contains("discord") || name_lower.contains("steam") || name_lower.contains("epic") || name_lower.contains("instagram") || name_lower.contains("facebook") || name_lower.contains("twitter") || name_lower.contains("tiktok") || name_lower.contains("reddit") {
                                     auto_category = "distracting";
-                                } else if name_lower.contains("kairos") || name_lower.contains("screen time") || name_lower.contains("brave") || name_lower.contains("chrome") || name_lower.contains("edge") || name_lower.contains("firefox") || name_lower.contains("explorer") || name_lower.contains("gezgin") || name_lower.contains("whatsapp") || name_lower.contains("search") || name_lower.contains("shell") || name_lower.contains("terminal") || name_lower.contains("task manager") || name_lower.contains("(youtube)") {
-                                    auto_category = "neutral";
-                                    auto_category = "neutral";
-                                }
                                 
                                 let _ = conn.execute(
                                     "INSERT INTO app_categories (app_name, category) VALUES (?1, ?2)",
