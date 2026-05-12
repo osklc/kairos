@@ -138,6 +138,8 @@
       "update.message": "A new version of Kairos is available:",
       "update.install": "Install & Restart",
       "update.skip": "Skip for now",
+      "update.installing": "Installing...",
+      "update.failed": "Update failed.",
       "chart.noData": "Loading data or not enough data to display..."
     },
     "tr": {
@@ -277,6 +279,8 @@
       "update.message": "Kairos'un yeni bir sürümü yayınlandı:",
       "update.install": "Kur ve Yeniden Başlat",
       "update.skip": "Şimdilik Geç",
+      "update.installing": "Yükleniyor...",
+      "update.failed": "Güncelleme başarısız.",
       "chart.noData": "Veriler yükleniyor veya gösterilecek yeterli veri yok..."
     }
   }

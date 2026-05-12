@@ -1,11 +1,13 @@
 {
   "name": "kairos",
   "private": true,
-  "version": "1.3.3",
+  "version": "1.3.4",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
     "dev-server": "serve ../src -l 1420"
+  },
+  "dependencies": {
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

@@ -1358,7 +1358,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-
   const categoryModal = document.getElementById("category-modal");
   const modalAppName = document.getElementById("modal-app-name");
   let currentAskApp = "";
@@ -1369,8 +1368,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (isModalOpen || askQueue.length === 0) return;
     isModalOpen = true;
     currentAskApp = askQueue.shift();
-    modalAppName.textContent = currentAskApp;
-    categoryModal.style.display = "flex";
+    if (modalAppName) modalAppName.textContent = currentAskApp;
+    if (categoryModal) categoryModal.style.display = "block";
   }
 
   if (categoryModal && modalAppName) {
@@ -1382,7 +1381,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       processAskQueue();
     });
 
-    document.querySelectorAll(".modal-buttons button[data-cat]").forEach(btn => {
+    document.querySelectorAll(".notification-buttons button[data-cat]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const category = btn.getAttribute("data-cat");
         try {
@@ -1390,7 +1389,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           categoryModal.style.display = "none";
           isModalOpen = false;
           fetchAndRenderSummary();
-          if (document.querySelector("#page-settings").classList.contains("active")) {
+          if (document.querySelector("#page-settings")?.classList.contains("active")) {
             loadAppCategories();
           }
           processAskQueue();
@@ -1410,10 +1409,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-
-  // ───── Focus Sounds Init ─────
   const soundsPage = document.getElementById("page-sounds");
   const trackEls = soundsPage ? soundsPage.querySelectorAll(".track[data-sound]") : [];
+
   const savedSoundSettings = await loadSoundSettings();
 
   for (const trackEl of trackEls) {

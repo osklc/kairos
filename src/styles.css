@@ -961,6 +961,81 @@ button {
   color: var(--text-main);
 }
 
+/* Notification Popup (Right Side) */
+.notification-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  width: 320px;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-color);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(120%); }
+  to { transform: translateX(0); }
+}
+
+.notification-content {
+  padding: 16px;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--accent-color);
+}
+
+.btn-close-minimal {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.notification-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.notification-buttons button {
+  padding: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Chart Empty State Styling */
+.chart-container div[id*="-empty"] {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  border: 1px dashed var(--field-border);
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+body[data-theme="black"] .chart-container div[id*="-empty"],
+body[data-theme="midnight"] .chart-container div[id*="-empty"],
+body[data-theme="cyberpunk"] .chart-container div[id*="-empty"] {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* Pomodoro Styles */
 .pomodoro-container {
   display: flex;

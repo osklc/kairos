@@ -427,7 +427,14 @@ fn read_system_power_watts(
                         }
                     }
                     if let Ok(power_mw) = device.power_usage() {
-                        total_gpu_watts += power_mw as f64 / 1000.0;
+                        let w = power_mw as f64 / 1000.0;
+                        total_gpu_watts += w;
+                        if w > 0.1 {
+                             eprintln!("[Kairos Debug] NVIDIA GPU Load: {:.2}W", w);
+                        }
+                    } else {
+                        // Log if we can't get power but device exists
+                        eprintln!("[Kairos Debug] NVIDIA GPU detected but power_usage() failed");
                     }
                 }
             }
@@ -435,6 +442,9 @@ fn read_system_power_watts(
             if total_gpu_watts > 0.0 {
                 total_watts += total_gpu_watts;
                 source.push_str("+gpu-nvml");
+                eprintln!("[Kairos Debug] NVIDIA GPU Load Detected: {} Watts (Model: {})", total_gpu_watts, gpu_model);
+            } else {
+                eprintln!("[Kairos Debug] NVIDIA GPU detected but reporting 0W (idle?)");
             }
         }
     }
@@ -489,18 +499,7 @@ fn spawn_power_emitter(app_handle: tauri::AppHandle, power_state: PowerMonitorSt
                 None
             }
         };
-
         loop {
-            let should_collect = app_handle
-                .get_webview_window("main")
-                .and_then(|window| window.is_visible().ok())
-                .unwrap_or(true);
-
-            if !should_collect {
-                tokio::time::sleep(Duration::from_secs(sample_interval_seconds)).await;
-                continue;
-            }
-
             let now = Utc::now().timestamp();
             let (watts, source, cpu_model, gpu_model, device_type) = {
                 let mut battery_manager = BatteryManager::new().ok();
@@ -1454,6 +1453,7 @@ pub fn run() {
                                     auto_category = "distracting";
                                 } else if name_lower.contains("kairos") || name_lower.contains("screen time") || name_lower.contains("brave") || name_lower.contains("chrome") || name_lower.contains("edge") || name_lower.contains("firefox") || name_lower.contains("explorer") || name_lower.contains("gezgin") || name_lower.contains("whatsapp") || name_lower.contains("search") || name_lower.contains("shell") || name_lower.contains("terminal") || name_lower.contains("task manager") || name_lower.contains("(youtube)") {
                                     auto_category = "neutral";
+                                    auto_category = "neutral";
                                 }
                                 
                                 let _ = conn.execute(
@@ -1462,7 +1462,20 @@ pub fn run() {
                                 );
 
                                 if auto_category == "uncategorized" {
-                                    let _ = app_handle.emit("ask_category", AskCategoryPayload { app_name: new_app_name.clone() });
+                                    let popup_enabled = (|| {
+                                        let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
+                                        let conn = Connection::open(db_path).ok()?;
+                                        let val: String = conn.query_row(
+                                            "SELECT value FROM settings WHERE key = 'enable_classification_popup'",
+                                            [],
+                                            |row| row.get(0)
+                                        ).unwrap_or_else(|_| "true".to_string());
+                                        Some(val == "true")
+                                    })().unwrap_or(true);
+
+                                    if popup_enabled {
+                                        let _ = app_handle.emit("ask_category", AskCategoryPayload { app_name: new_app_name.clone() });
+                                    }
                                 }
                             }
 
