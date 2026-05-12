@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%234E9EE5' width='180' height='180'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>K</text></svg>" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="sounds.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,8 +12,9 @@
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="application-version" content="1.4.0" />
   <title>Kairos: Screen Time Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
   <script type="module" src="main.js" defer></script>
 </head>
 
@@ -54,7 +56,7 @@
     <div class="modal-content">
       <h3 data-i18n="update.title">Update Available</h3>
       <p><span data-i18n="update.message">A new version of Kairos is available:</span> <strong
-          id="update-version">v1.3.2</strong></p>
+          id="update-version">v1.4.0</strong></p>
       <div class="modal-buttons">
         <button id="update-btn-install" class="btn-productive" data-i18n="update.install">Install & Restart</button>
         <button id="update-btn-skip" class="btn-skip" data-i18n="update.skip">Skip for now</button>
@@ -143,7 +145,7 @@
         </button>
       </nav>
       <div class="sidebar-footer">
-        <span class="version-text">v1.3.4</span>
+        <span class="version-text">v1.4.0</span>
       </div>
     </aside>
 

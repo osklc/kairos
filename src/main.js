@@ -15,7 +15,6 @@ const POMO_SETTINGS_KEY = "pomodoro-settings";
 const POMO_STATS_KEY = "pomodoro-stats";
 const POMO_RING_CIRCUMFERENCE = 2 * Math.PI * 90; // ~565.48
 const INTERNET_TIME_ENDPOINTS = [
-  "https://worldtimeapi.org/api/ip",
   "https://timeapi.io/api/Time/current/zone?timeZone=UTC",
 ];
 
@@ -1494,7 +1493,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const autostartToggle = document.getElementById("autostart-toggle");
   if (autostartToggle) {
     try {
-      const { isEnabled, enable, disable } = window.__TAURI__.plugins.autostart;
+      const autostartApi = window.__TAURI__?.plugins?.autostart;
+      if (!autostartApi) {
+        throw new Error("Autostart plugin API unavailable");
+      }
+
+      const { isEnabled, enable, disable } = autostartApi;
 
       // Get initial state
       const enabled = await isEnabled();
