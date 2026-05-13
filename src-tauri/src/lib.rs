@@ -422,22 +422,90 @@ fn read_system_power_watts(
             let mut total_gpu_watts = 0.0;
             for idx in 0..device_count {
                 if let Ok(device) = nvml_api.device_by_index(idx) {
+                    let mut device_name = None;
+                    let mut gpu_utilization = None;
+                    let mut memory_utilization = None;
+                    let mut graphics_processes = None;
+                    let mut compute_processes = None;
+
                     if gpu_model == "Unknown GPU" {
                         if let Ok(name) = device.name() {
                             if !name.trim().is_empty() {
-                                gpu_model = name;
+                                gpu_model = name.clone();
+                                device_name = Some(name);
                             }
                         }
                     }
-                    if let Ok(power_mw) = device.power_usage() {
-                        let w = power_mw as f64 / 1000.0;
-                        total_gpu_watts += w;
-                        if w > 0.1 {
-                             eprintln!("[Kairos Debug] NVIDIA GPU Load: {:.2}W", w);
-                        }
+
+                    if let Ok(utilization) = device.utilization_rates() {
+                        gpu_utilization = Some(utilization.gpu as f64);
+                        memory_utilization = Some(utilization.memory as f64);
+                    }
+
+                    if let Ok(count) = device.running_graphics_processes_count() {
+                        graphics_processes = Some(count);
+                    }
+
+                    if let Ok(count) = device.running_compute_processes_count() {
+                        compute_processes = Some(count);
+                    }
+
+                    let measured_power_watts = device
+                        .power_usage()
+                        .ok()
+                        .map(|power_mw| power_mw as f64 / 1000.0)
+                        .unwrap_or(0.0);
+
+                    let gpu_active = gpu_utilization.unwrap_or(0.0) > 0.0
+                        || memory_utilization.unwrap_or(0.0) > 0.0
+                        || graphics_processes.unwrap_or(0) > 0
+                        || compute_processes.unwrap_or(0) > 0;
+
+                    let estimated_power_watts = if measured_power_watts > 0.0 {
+                        0.0
+                    } else if gpu_active {
+                        let gpu_util = gpu_utilization.unwrap_or(0.0).clamp(0.0, 100.0);
+                        let memory_util = memory_utilization.unwrap_or(0.0).clamp(0.0, 100.0);
+                        let process_count = graphics_processes.unwrap_or(0) + compute_processes.unwrap_or(0);
+                        8.0 + (gpu_util * 0.32) + (memory_util * 0.12) + (process_count as f64 * 1.5)
                     } else {
-                        // Log if we can't get power but device exists
-                        eprintln!("[Kairos Debug] NVIDIA GPU detected but power_usage() failed");
+                        0.0
+                    };
+
+                    let device_total_watts = measured_power_watts.max(estimated_power_watts);
+
+                    if device_total_watts > 0.0 {
+                        total_gpu_watts += device_total_watts;
+                        let device_label = device_name
+                            .as_deref()
+                            .or_else(|| if gpu_model == "Unknown GPU" { None } else { Some(gpu_model.as_str()) })
+                            .unwrap_or("Unknown NVIDIA GPU");
+                        eprintln!(
+                            "[Kairos Debug] NVIDIA GPU #{} {}: power={:.2}W, gpu_util={:.0}%, memory_util={:.0}%, graphics_processes={}, compute_processes={}, source={}{}",
+                            idx,
+                            device_label,
+                            measured_power_watts,
+                            gpu_utilization.unwrap_or(0.0),
+                            memory_utilization.unwrap_or(0.0),
+                            graphics_processes.unwrap_or(0),
+                            compute_processes.unwrap_or(0),
+                            if measured_power_watts > 0.0 { "measured" } else { "estimated" },
+                            if estimated_power_watts > 0.0 { "-load" } else { "" }
+                        );
+                    } else {
+                        let device_label = device_name
+                            .as_deref()
+                            .or_else(|| if gpu_model == "Unknown GPU" { None } else { Some(gpu_model.as_str()) })
+                            .unwrap_or("Unknown NVIDIA GPU");
+                        eprintln!(
+                            "[Kairos Debug] NVIDIA GPU #{} {} detected but idle: gpu_util={:.0}%, memory_util={:.0}%, graphics_processes={}, compute_processes={}",
+                            idx,
+                            device_label,
+                            gpu_utilization.unwrap_or(0.0),
+                            memory_utilization.unwrap_or(0.0),
+                            graphics_processes.unwrap_or(0),
+                            compute_processes.unwrap_or(0)
+                        );
                     }
                 }
             }
@@ -445,7 +513,7 @@ fn read_system_power_watts(
             if total_gpu_watts > 0.0 {
                 total_watts += total_gpu_watts;
                 source.push_str("+gpu-nvml");
-                eprintln!("[Kairos Debug] NVIDIA GPU Load Detected: {} Watts (Model: {})", total_gpu_watts, gpu_model);
+                eprintln!("[Kairos Debug] NVIDIA GPU Load Detected: {:.2} Watts (Model: {})", total_gpu_watts, gpu_model);
             } else {
                 eprintln!("[Kairos Debug] NVIDIA GPU detected but reporting 0W (idle?)");
             }
@@ -1186,7 +1254,6 @@ async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> {
                         Ok(()) => {
                             // Successfully downloaded and installed, restart the app
                             app_handle.restart();
-                            Ok(())
                         }
                         Err(e) => {
                             eprintln!("Download/Install error: {}", e);
