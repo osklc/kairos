@@ -23,7 +23,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.github
+
+# GitHub - selective ignore
+.github/agents/
+.github/hooks/
+.github/instructions/
+.github/AUTO-UPDATE-TESTING.md
+.github/ROADMAP.md
+.github/VERSION-MANAGEMENT.md
+# Allow workflows and release.yml
+!.github/
+!.github/workflows/
+!.github/workflows/release.yml
 
 # Debug
 *.bat
