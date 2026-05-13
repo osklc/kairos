@@ -64,3 +64,80 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  create-latest-json:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id')
+          
+          mkdir -p /tmp/release-assets
+          cd /tmp/release-assets
+          
+          # Download Windows .msi.zip and its signature
+          gh release download $VERSION --repo ${{ github.repository }} --pattern "*.msi.zip*"
+          ls -la
+
+      - name: Create latest.json
+        run: |
+          VERSION="${{ github.ref_name }}"
+          CLEAN_VERSION=${VERSION#v}
+          
+          # Extract signature from .sig file
+          SIGNATURE=$(cat /tmp/release-assets/*.msi.zip.sig 2>/dev/null || echo "")
+          
+          # Get download URL
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/$VERSION/Kairos_${CLEAN_VERSION}_x64_en-US.msi.zip"
+          
+          # Create latest.json
+          cat > /tmp/latest.json <<EOF
+          {
+            "version": "$CLEAN_VERSION",
+            "notes": "See https://github.com/${{ github.repository }}/releases/tag/$VERSION for release notes",
+            "pub_date": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "platforms": {
+              "windows-x86_64": {
+                "signature": "$SIGNATURE",
+                "url": "$DOWNLOAD_URL"
+              }
+            }
+          }
+          EOF
+          
+          cat /tmp/latest.json
+
+      - name: Upload latest.json to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          
+          # Upload latest.json as release asset
+          gh release upload $VERSION /tmp/latest.json \
+            --repo ${{ github.repository }} \
+            --clobber
+
+      - name: Update latest.json in repo root
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          # Copy latest.json to repo root
+          cp /tmp/latest.json latest.json
+          
+          # Commit and push
+          git add latest.json
+          git commit -m "chore: update latest.json for ${{ github.ref_name }}"
+          git push

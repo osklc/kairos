@@ -27,9 +27,9 @@
     "autostart": null,
     "updater": {
       "endpoints": [
-        "https://github.com/osklc/kairos/releases/latest/download/latest.json"
+        "https://raw.githubusercontent.com/osklc/kairos/main/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENCNUU4MDRFMEJBMThBMzAKUldRd2lxRUxUb0JleTYycmRrUldBNXFTWFJWb3dIZnMyYlpBUmYyT09DQ2k5T2YxQ0ZFZWYzUWkK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENBNUU4MDRFMEJBMThBMzAKUldRd2lxRUxUb0JleTYycmRrUldBNXFTWFJWb3dIZnMyYlpBUmYyT09DQ2k5T2YxQ0ZFZWYzUWkK"
     }
   },
   "bundle": {
