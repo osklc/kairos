@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="application-version" content="1.4.0" />
+  <meta name="application-version" content="1.4.1" />
   <title>Kairos: Screen Time Tracker</title>
   <script src="assets/vendor/chart.umd.min.js"></script>
   <script type="module" src="main.js" defer></script>
@@ -56,7 +56,7 @@
     <div class="modal-content">
       <h3 data-i18n="update.title">Update Available</h3>
       <p><span data-i18n="update.message">A new version of Kairos is available:</span> <strong
-          id="update-version">v1.4.0</strong></p>
+          id="update-version">v1.4.1</strong></p>
       <div class="modal-buttons">
         <button id="update-btn-install" class="btn-productive" data-i18n="update.install">Install & Restart</button>
         <button id="update-btn-skip" class="btn-skip" data-i18n="update.skip">Skip for now</button>
@@ -145,7 +145,7 @@
         </button>
       </nav>
       <div class="sidebar-footer">
-        <span class="version-text">v1.4.0</span>
+        <span class="version-text">v1.4.1</span>
       </div>
     </aside>
 
@@ -564,6 +564,13 @@
             <input type="checkbox" id="disable-prompt-toggle" />
             <label class="setting-label" for="disable-prompt-toggle" data-i18n="settings.disableCategoryPrompt">Disable
               new app category prompts</label>
+          </div>
+
+          <div class="setting-item">
+            <button type="button" id="check-updates-btn" class="btn-productive" style="max-width: 240px;"
+              data-i18n="settings.checkUpdates">Check for Updates</button>
+            <p id="update-status" style="display: none; margin-top: 8px; color: var(--text-muted); font-size: 0.92rem;"
+              data-i18n="update.upToDate">You are up to date.</p>
           </div>
 
           <div class="setting-item">

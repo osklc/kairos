@@ -1,7 +1,7 @@
 {
   "$schema": "./gen/schemas/tauri-config-v2.schema.json",
   "productName": "Kairos",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "identifier": "com.osklc.kairos",
   "build": {
     "beforeDevCommand": "npm run dev-server",
@@ -27,7 +27,7 @@
     "autostart": null,
     "updater": {
       "endpoints": [
-        "https://raw.githubusercontent.com/osklc/kairos/main/latest.json"
+        "https://github.com/osklc/kairos/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENBNUU4MDRFMEJBMThBMzAKUldRd2lxRUxUb0JleTYycmRrUldBNXFTWFJWb3dIZnMyYlpBUmYyT09DQ2k5T2YxQ0ZFZWYzUWkK"
     }

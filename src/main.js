@@ -29,6 +29,16 @@ let soundSaveTimer = null;
 let globalAnalyser = null;
 let globalAudioCtx = null;
 let visualizerAnimationId = null;
+let updateCheckInProgress = false;
+
+function setUpdateStatus(message, isError = false) {
+  const statusEl = document.getElementById("update-status");
+  if (!statusEl) return;
+
+  statusEl.textContent = message;
+  statusEl.style.display = message ? "block" : "none";
+  statusEl.dataset.state = isError ? "error" : "info";
+}
 
 function translate(key) {
   return activeDictionary[key] ?? key;
@@ -1244,6 +1254,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  const checkUpdatesBtn = document.querySelector("#check-updates-btn");
+  if (checkUpdatesBtn) {
+    checkUpdatesBtn.addEventListener("click", () => {
+      checkForUpdates();
+    });
+  }
+
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
   const greetForm = document.querySelector("#greet-form");
@@ -1763,40 +1780,62 @@ function startVisualizer() {
 
 // ── Auto Updater ──
 
-async function initUpdater() {
+async function showUpdateModal(newVersion) {
+  const modal = document.getElementById("update-modal");
+  const versionSpan = document.getElementById("update-version");
+  const installButton = document.getElementById("update-btn-install");
+  const skipButton = document.getElementById("update-btn-skip");
+
+  if (!modal || !versionSpan || !installButton || !skipButton) return;
+
+  versionSpan.textContent = `v${newVersion}`;
+  modal.style.display = "flex";
+
+  installButton.onclick = async () => {
+    installButton.textContent = translate("update.installing") || "Installing...";
+    installButton.disabled = true;
+    try {
+      await invoke("install_update");
+    } catch (e) {
+      console.error("Update failed:", e);
+      installButton.textContent = "Failed";
+    }
+  };
+
+  skipButton.onclick = () => {
+    modal.style.display = "none";
+  };
+}
+
+async function checkForUpdates() {
+  if (updateCheckInProgress) return;
+  updateCheckInProgress = true;
+  setUpdateStatus(translate("update.checking") || "Checking for updates...");
+
   try {
     const newVersion = await invoke("check_update");
     if (newVersion) {
-      const modal = document.getElementById("update-modal");
-      const versionSpan = document.getElementById("update-version");
-      if (modal && versionSpan) {
-        versionSpan.textContent = `v${newVersion}`;
-        modal.style.display = "flex";
-
-        document.getElementById("update-btn-install").addEventListener("click", async () => {
-          const btn = document.getElementById("update-btn-install");
-          btn.textContent = translate("update.installing") || "Installing...";
-          btn.disabled = true;
-          try {
-            await invoke("install_update");
-          } catch (e) {
-            console.error("Update failed:", e);
-            btn.textContent = "Failed";
-          }
-        });
-
-        document.getElementById("update-btn-skip").addEventListener("click", () => {
-          modal.style.display = "none";
-        });
-      }
+      setUpdateStatus("");
+      await showUpdateModal(newVersion);
+    } else {
+      setUpdateStatus(translate("update.upToDate") || "You are up to date.");
     }
   } catch (err) {
-    console.error("Failed to check for updates:", err);
+    const message = String(err);
+    if (message.includes("valid release JSON")) {
+      setUpdateStatus(translate("update.invalidManifest") || "Update metadata is invalid on the server.", true);
+      console.warn("Updater manifest is invalid:", err);
+    } else {
+      console.error("Failed to check for updates:", err);
+      setUpdateStatus(translate("update.checkFailed") || "Failed to check for updates.", true);
+    }
+  } finally {
+    updateCheckInProgress = false;
   }
 }
 
 // Run updater check
-setTimeout(initUpdater, 2000);
+setTimeout(checkForUpdates, 2000);
 
 // ── Data Export ──
 
