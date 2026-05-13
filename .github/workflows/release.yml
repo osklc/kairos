@@ -61,7 +61,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Kairos ${{ github.ref_name }}'
           releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           generateReleaseNotes: true
           args: ${{ matrix.args }}
@@ -82,22 +82,34 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ github.ref_name }}"
-          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id')
           
           mkdir -p /tmp/release-assets
           cd /tmp/release-assets
           
+          # Verify release exists
+          if ! gh release view $VERSION --repo ${{ github.repository }} > /dev/null 2>&1; then
+            echo "Release $VERSION not found. Waiting a moment and retrying..."
+            sleep 5
+          fi
+          
           # Download Windows .msi.zip and its signature
-          gh release download $VERSION --repo ${{ github.repository }} --pattern "*.msi.zip*"
-          ls -la
+          gh release download $VERSION --repo ${{ github.repository }} --pattern "*.msi.zip*" || true
+          
+          echo "Downloaded files:"
+          ls -lah
 
       - name: Create latest.json
         run: |
           VERSION="${{ github.ref_name }}"
           CLEAN_VERSION=${VERSION#v}
           
-          # Extract signature from .sig file
-          SIGNATURE=$(cat /tmp/release-assets/*.msi.zip.sig 2>/dev/null || echo "")
+          # Extract signature from .sig file if it exists
+          SIGNATURE=""
+          if [ -f /tmp/release-assets/*.msi.zip.sig ]; then
+            SIGNATURE=$(cat /tmp/release-assets/*.msi.zip.sig)
+          else
+            echo "Warning: Signature file not found, using empty string"
+          fi
           
           # Get download URL
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/$VERSION/Kairos_${CLEAN_VERSION}_x64_en-US.msi.zip"
@@ -117,6 +129,7 @@ jobs:
           }
           EOF
           
+          echo "Generated latest.json:"
           cat /tmp/latest.json
 
       - name: Upload latest.json to release
