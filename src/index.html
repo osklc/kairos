@@ -12,10 +12,10 @@
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="application-version" content="1.4.1" />
+  <meta name="application-version" content="1.4.2" />
   <title>Kairos: Screen Time Tracker</title>
   <script src="assets/vendor/chart.umd.min.js"></script>
-  <script type="module" src="main.js" defer></script>
+  <script type="module" src="bundle.js" defer></script>
 </head>
 
 <body>
@@ -56,7 +56,7 @@
     <div class="modal-content">
       <h3 data-i18n="update.title">Update Available</h3>
       <p><span data-i18n="update.message">A new version of Kairos is available:</span> <strong
-          id="update-version">v1.4.1</strong></p>
+          id="update-version">v1.4.2</strong></p>
       <div class="modal-buttons">
         <button id="update-btn-install" class="btn-productive" data-i18n="update.install">Install & Restart</button>
         <button id="update-btn-skip" class="btn-skip" data-i18n="update.skip">Skip for now</button>
@@ -145,9 +145,25 @@
         </button>
       </nav>
       <div class="sidebar-footer">
-        <span class="version-text">v1.4.1</span>
+        <span class="version-text">v1.4.2</span>
+        <button id="bug-report-btn" class="btn-small" style="margin-left:8px;">Report Bug</button>
       </div>
     </aside>
+    <!-- Bug report modal -->
+    <div id="bug-report-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:9999;">
+      <div class="modal-content" style="background:var(--surface, #fff); color:var(--text, #111); width:520px; max-width:95%; border-radius:8px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:Inter, sans-serif;">
+        <h3 style="margin:0 0 8px;font-weight:600;">Report a Bug</h3>
+        <p style="margin:0 0 12px; color:var(--text-muted,#6b7280);">Describe the issue briefly. Optionally provide an email for follow-up.</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <textarea id="bug-desc" rows="6" placeholder="What happened? Steps to reproduce, expected vs actual..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #e5e7eb; resize:vertical;"></textarea>
+          <input id="bug-email" type="email" placeholder="Optional email (for follow-up)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #e5e7eb;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+          <button id="bug-cancel" class="btn-small btn-skip">Cancel</button>
+          <button id="bug-send" class="btn-small btn-productive">Send Report</button>
+        </div>
+      </div>
+    </div>
 
     <section class="content-area">
       <header class="topbar">
@@ -156,6 +172,20 @@
       </header>
 
       <section class="page active" id="page-overview" aria-label="Overview page">
+        <!-- Memento Mori Widget -->
+        <div class="memento-mori-widget">
+          <div class="memento-mori-label">
+            <span data-i18n="overview.mementoMori">Time Left Today</span>
+            <span id="memento-mori-time">0h 0m</span>
+          </div>
+          <div class="memento-mori-bar-container">
+            <div class="memento-mori-bar" id="memento-mori-bar"></div>
+          </div>
+          <div class="memento-mori-info">
+            <span class="memento-mori-quote" data-i18n="overview.mementoQuote">Memento Mori: Remember you must die</span>
+          </div>
+        </div>
+
         <div class="cards-grid">
           <article class="card">
             <h3 data-i18n="overview.activeWindow">Active Window</h3>

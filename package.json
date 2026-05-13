@@ -1,16 +1,19 @@
 {
   "name": "kairos",
   "private": true,
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "scripts": {
     "tauri": "tauri",
-    "dev-server": "serve src -l 1420"
+    "build-js": "esbuild src/main.js --bundle --outfile=src/bundle.js --platform=browser --format=esm --minify",
+    "dev-server": "npm run build-js && serve src -l 1420"
   },
   "dependencies": {
+    "@sentry/browser": "^7.52.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
-    "serve": "^14.2.6"
+    "serve": "^14.2.6",
+    "esbuild": "^0.18.0"
   }
 }

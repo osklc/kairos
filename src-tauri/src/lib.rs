@@ -11,6 +11,9 @@ use sysinfo::System;
 use tauri::{Emitter, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use std::fs;
+use std::env;
+use regex::Regex;
+use sentry;
 
 #[cfg(target_os = "windows")]
 use wmi::{COMLibrary, WMIConnection};
@@ -679,6 +682,11 @@ fn normalize_app_name(raw_name: &str, title: &str) -> String {
     cleaned
 }
 
+fn scrub_paths(s: &str) -> String {
+    let re = Regex::new(r"[A-Za-z]:\\\\[^\s\n]+|/home/[^\s\n]+").unwrap();
+    re.replace_all(s, "[REDACTED_PATH]").to_string()
+}
+
 fn should_ignore_window(app_name: &str, title: &str) -> bool {
     let name_lower = app_name.to_lowercase();
     let title_lower = title.to_lowercase();
@@ -1072,6 +1080,25 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
+fn get_sentry_dsn() -> Option<String> {
+    std::env::var("SENTRY_DSN").ok().filter(|s| !s.is_empty())
+}
+
+#[tauri::command]
+fn send_manual_bug_report(description: String, email: Option<String>) -> Result<(), String> {
+    let scrubbed = scrub_paths(&description);
+    if let Some(e) = email {
+        let e2 = scrub_paths(&e);
+        sentry::configure_scope(|scope| {
+            scope.set_tag("user_email", &e2);
+        });
+    }
+    // Send as a simple message to Sentry (privacy-first: description is scrubbed)
+    sentry::capture_message(&scrubbed, sentry::Level::Error);
+    Ok(())
+}
+
+#[tauri::command]
 fn get_setting(app_handle: tauri::AppHandle, key: String) -> Result<Option<String>, String> {
     let db_path = app_handle.path().app_data_dir().unwrap().join("tracker.db");
     let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
@@ -1265,6 +1292,31 @@ async fn export_data(app_handle: tauri::AppHandle, format: String) -> Result<Opt
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Initialize Sentry early if DSN provided via environment variable.
+    let _sentry_guard = match std::env::var("SENTRY_DSN") {
+        Ok(dsn) if !dsn.is_empty() => {
+            let guard = sentry::init((dsn.as_str(), sentry::ClientOptions {
+                release: Some(env!("CARGO_PKG_VERSION").into()),
+                ..Default::default()
+            }));
+
+            // Register a panic hook that scrubs local paths before sending.
+            std::panic::set_hook(Box::new(|info| {
+                let payload = if let Some(s) = info.payload().downcast_ref::<&str>() {
+                    s.to_string()
+                } else if let Some(s) = info.payload().downcast_ref::<String>() {
+                    s.clone()
+                } else {
+                    format!("panic: {}", info)
+                };
+                let scrubbed = scrub_paths(&payload);
+                let _ = sentry::capture_message(&scrubbed, sentry::Level::Error);
+            }));
+
+            Some(guard)
+        }
+        _ => None,
+    };
     tauri::Builder::default()
         .manage(PowerMonitorState {
             smoothing_mode: Arc::new(Mutex::new(PowerSmoothingMode::Balanced)),
@@ -1498,7 +1550,7 @@ pub fn run() {
             });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_weekly_stats, get_monthly_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update, export_data])
+        .invoke_handler(tauri::generate_handler![greet, get_sessions, get_today_summary, get_all_apps, set_app_category, get_app_usage, get_daily_stats, get_weekly_stats, get_monthly_stats, get_pending_reviews, resolve_review, get_setting, set_setting, get_audio_file, set_power_smoothing_mode, get_power_smoothing_mode, check_update, install_update, export_data, get_sentry_dsn, send_manual_bug_report])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

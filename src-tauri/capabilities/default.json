@@ -12,4 +12,8 @@
     "dialog:default",
     "updater:default"
   ]
+  ,
+  "allowedProtocols": [
+    "https:"
+  ]
 }

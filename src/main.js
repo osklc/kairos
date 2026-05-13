@@ -1,6 +1,106 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
+import * as Sentry from "@sentry/browser";
+
+function scrubPaths(str) {
+  try {
+    return String(str)
+      .replace(/[A-Za-z]:\\\\[^\s\n"]*/g, '[REDACTED_PATH]')
+      .replace(/\/home\/[^\s\n"]*/g, '[REDACTED_PATH]');
+  } catch (e) {
+    return String(str || '');
+  }
+}
+
+async function initSentry() {
+  try {
+    const dsn = await invoke('get_sentry_dsn');
+    if (!dsn) return;
+    const version = document.querySelector('meta[name="application-version"]')?.getAttribute('content') || 'unknown';
+    Sentry.init({
+      dsn,
+      release: version,
+      beforeSend(event) {
+        try {
+          if (event.message) event.message = scrubPaths(event.message);
+          if (event.exception && event.exception.values) {
+            event.exception.values.forEach(v => {
+              if (v.value) v.value = scrubPaths(v.value);
+              if (v.stacktrace && v.stacktrace.frames) {
+                v.stacktrace.frames.forEach(f => {
+                  if (f.filename) f.filename = scrubPaths(f.filename);
+                });
+              }
+            });
+          }
+        } catch (e) {}
+        return event;
+      }
+    });
+
+    window.addEventListener('error', ev => {
+      try { Sentry.captureException(ev.error || ev.message); } catch (e) {}
+    });
+    window.addEventListener('unhandledrejection', ev => {
+      try { Sentry.captureException(ev.reason); } catch (e) {}
+    });
+  } catch (e) {
+    console.error('Sentry init failed', e);
+  }
+}
+
+initSentry();
+
+// Modal-based bug report UI (Stoic / Minimalist)
+document.addEventListener('DOMContentLoaded', () => {
+  const bugBtn = document.getElementById('bug-report-btn');
+  const modal = document.getElementById('bug-report-modal');
+  const descEl = document.getElementById('bug-desc');
+  const emailEl = document.getElementById('bug-email');
+  const sendBtn = document.getElementById('bug-send');
+  const cancelBtn = document.getElementById('bug-cancel');
+
+  function openModal() {
+    if (!modal) return;
+    descEl.value = '';
+    emailEl.value = '';
+    modal.style.display = 'flex';
+    descEl.focus();
+  }
+  function closeModal() { if (modal) modal.style.display = 'none'; }
+
+  if (bugBtn) bugBtn.addEventListener('click', openModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  if (sendBtn) sendBtn.addEventListener('click', async () => {
+    try {
+      const desc = (descEl.value || '').trim();
+      const email = (emailEl.value || '').trim();
+      if (!desc) { alert('Please provide a short description of the bug.'); return; }
+
+      const scrubbedDesc = scrubPaths(desc);
+      const scrubbedEmail = email ? email.replace(/\s+/g, '') : null;
+
+      // Attach user email as a tag (privacy-first) and capture message
+      if (scrubbedEmail) {
+        Sentry.configureScope(scope => { scope.setTag('user_email', scrubbedEmail); });
+      }
+
+      Sentry.captureMessage(`[User BugReport] ${scrubbedDesc}`);
+
+      // Send to backend Sentry hook (Rust) as well for server-side correlation
+      await invoke('send_manual_bug_report', { description: scrubbedDesc, email: scrubbedEmail });
+
+      closeModal();
+      alert('Thanks — bug report sent.');
+    } catch (e) {
+      console.error('Failed to send manual bug report', e);
+      alert('Failed to send bug report.');
+    }
+  });
+});
+
 let greetInputEl;
 let greetMsgEl;
 let activeDictionary = {};
@@ -129,6 +229,39 @@ async function fetchAndRenderSummary() {
   } catch (err) {
     console.error("Failed to fetch summary:", err);
   }
+}
+
+// ── Memento Mori Widget ──
+
+function updateMementoMoriWidget() {
+  const timeEl = document.getElementById("memento-mori-time");
+  const barEl = document.getElementById("memento-mori-bar");
+  
+  if (!timeEl || !barEl) return;
+
+  const now = new Date();
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const timeSinceStartMs = now - startOfDay;
+  const totalMsInDay = 24 * 60 * 60 * 1000;
+  // Use elapsed-day percentage so at day start the bar is 0% (not 100% showing 24h left)
+  const percentageElapsed = Math.max(0, Math.min(100, (timeSinceStartMs / totalMsInDay) * 100));
+
+  const endOfDay = new Date(startOfDay.getTime() + totalMsInDay - 1);
+  const timeLeftMs = endOfDay - now;
+  const hoursLeft = Math.floor(timeLeftMs / (1000 * 60 * 60));
+  const minutesLeft = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  timeEl.textContent = `${hoursLeft}h ${minutesLeft}m`;
+  barEl.style.width = `${percentageElapsed}%`;
+}
+
+function initMementoMoriWidget() {
+  updateMementoMoriWidget();
+  
+  // Update every second
+  setInterval(updateMementoMoriWidget, 1000);
 }
 
 async function loadAppCategories() {
@@ -1147,6 +1280,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   fetchAndRenderSummary();
   fetchAndRenderAppUsage();
+  initMementoMoriWidget();
 
   function refreshActivePage() {
     const activePage = document.querySelector(".page.active");

@@ -46,7 +46,7 @@ src-tauri/target/
 node_modules/
 dist/
 
-# Ortam dosyaları
+# Environment files
 .env
 .env.local
 

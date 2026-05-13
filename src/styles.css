@@ -498,6 +498,17 @@ body {
   display: none;
 }
 
+/* Hide the report button on small viewports or when sidebar is collapsed */
+.sidebar.collapsed .sidebar-footer #bug-report-btn {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .sidebar-footer #bug-report-btn {
+    display: none !important;
+  }
+}
+
 .content-area {
   flex: 1;
   padding: 28px;
@@ -536,6 +547,83 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 16px;
+}
+
+/* Memento Mori Widget */
+.memento-mori-widget {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: var(--s-radius);
+  background: linear-gradient(135deg, rgba(140, 120, 81, 0.08) 0%, rgba(140, 120, 81, 0.03) 100%);
+  border: 1px solid rgba(140, 120, 81, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.memento-mori-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.memento-mori-label span:first-child {
+  font-weight: 600;
+  color: var(--text-main);
+  opacity: 0.8;
+}
+
+.memento-mori-label span:last-child {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent-color);
+}
+
+.memento-mori-bar-container {
+  width: 100%;
+  height: 3px;
+  background: rgba(140, 120, 81, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.memento-mori-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color), rgba(140, 120, 81, 0.7));
+  width: 0%;
+  border-radius: 2px;
+  transition: width 1s linear;
+  box-shadow: 0 0 6px rgba(140, 120, 81, 0.4);
+}
+
+.memento-mori-info {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Dark theme adjustments for Memento Mori */
+body[data-theme="black"] .memento-mori-widget {
+  background: linear-gradient(135deg, rgba(138, 138, 138, 0.08) 0%, rgba(138, 138, 138, 0.03) 100%);
+  border-color: rgba(138, 138, 138, 0.15);
+}
+
+body[data-theme="black"] .memento-mori-bar {
+  background: linear-gradient(90deg, #8a8a8a, rgba(138, 138, 138, 0.7));
+  box-shadow: 0 0 6px rgba(138, 138, 138, 0.4);
+}
+
+body[data-theme="midnight"] .memento-mori-widget {
+  background: linear-gradient(135deg, rgba(100, 181, 246, 0.08) 0%, rgba(100, 181, 246, 0.03) 100%);
+  border-color: rgba(100, 181, 246, 0.15);
+}
+
+body[data-theme="midnight"] .memento-mori-bar {
+  background: linear-gradient(90deg, #64b5f6, rgba(100, 181, 246, 0.7));
+  box-shadow: 0 0 6px rgba(100, 181, 246, 0.4);
 }
 
 .charts-grid {
@@ -1349,6 +1437,11 @@ body[data-theme="cyberpunk"] .chart-container div[id*="-empty"] {
 
   .content-area {
     padding: 18px;
+  }
+
+  /* When sidebar switches to icon mode at <=900px, hide the report button too */
+  .sidebar-footer #bug-report-btn {
+    display: none !important;
   }
 
   .topbar {
