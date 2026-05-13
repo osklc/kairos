@@ -1182,14 +1182,23 @@ async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> {
         Ok(updater) => {
             match updater.check().await {
                 Ok(Some(update)) => {
-                    update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
-                    app_handle.restart();
+                    match update.download_and_install(|_, _| {}, || {}).await {
+                        Ok(()) => {
+                            // Successfully downloaded and installed, restart the app
+                            app_handle.restart();
+                            Ok(())
+                        }
+                        Err(e) => {
+                            eprintln!("Download/Install error: {}", e);
+                            Err(format!("Failed to download/install update: {}", e))
+                        }
+                    }
                 }
                 Ok(None) => Err("No update available".to_string()),
-                Err(e) => Err(e.to_string()),
+                Err(e) => Err(format!("Update check failed: {}", e)),
             }
         }
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(format!("Updater not available: {}", e)),
     }
 }
 

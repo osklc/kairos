@@ -94,8 +94,8 @@ jobs:
             sleep 5
           fi
           
-          # Download Windows .msi.zip and its signature
-          gh release download $VERSION --repo ${{ github.repository }} --pattern "*.msi.zip*" || true
+          # Download Windows .msi and its signature
+          gh release download $VERSION --repo ${{ github.repository }} --pattern "*_x64_en-US.msi*" || true
           
           echo "Downloaded files:"
           ls -lah
@@ -107,14 +107,14 @@ jobs:
           
           # Extract signature from .sig file if it exists
           SIGNATURE=""
-          if [ -f /tmp/release-assets/*.msi.zip.sig ]; then
-            SIGNATURE=$(cat /tmp/release-assets/*.msi.zip.sig)
+          if [ -f /tmp/release-assets/*_x64_en-US.msi.sig ]; then
+            SIGNATURE=$(cat /tmp/release-assets/*_x64_en-US.msi.sig)
           else
             echo "Warning: Signature file not found, using empty string"
           fi
           
           # Get download URL
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/$VERSION/Kairos_${CLEAN_VERSION}_x64_en-US.msi.zip"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/$VERSION/Kairos_${CLEAN_VERSION}_x64_en-US.msi"
           
           # Create latest.json
           cat > /tmp/latest.json <<EOF

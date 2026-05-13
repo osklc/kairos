@@ -1930,9 +1930,14 @@ async function showUpdateModal(newVersion) {
     installButton.disabled = true;
     try {
       await invoke("install_update");
+      // If we get here without error, installation succeeded and app will restart
     } catch (e) {
-      console.error("Update failed:", e);
-      installButton.textContent = "Failed";
+      const errorMessage = String(e);
+      console.error("Update installation failed:", errorMessage);
+      installButton.textContent = "Failed - " + errorMessage.substring(0, 30);
+      installButton.disabled = false;
+      // Show detailed error in console for debugging
+      setUpdateStatus(`Update failed: ${errorMessage}`, true);
     }
   };
 
