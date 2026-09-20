@@ -67,4 +67,9 @@
   <symbol id="icon-energy" viewBox="0 0 24 24">
     <path d="M13 2L4 13h6l-1 9 9-11h-6l1-9z" fill="currentColor" />
   </symbol>
+
+  <symbol id="icon-eco" viewBox="0 0 24 24">
+    <path d="M11 20A7 7 0 0 1 4 13C4 7 11 3 20 3c0 9-4 16-9 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M11 20c0-4.5 3.5-8 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </symbol>
 </svg>

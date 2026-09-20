@@ -115,6 +115,12 @@
               </svg>
               <span class="label" data-i18n="nav.energy">Electricity Usage</span>
             </button>
+            <button class="nav-link" type="button" data-page="eco">
+              <svg class="icon" aria-hidden="true" focusable="false">
+                <use href="assets/sidebar-icons.svg#icon-eco"></use>
+              </svg>
+              <span class="label" data-i18n="nav.eco">Eco-Area</span>
+            </button>
 
           </div>
         </div>
@@ -196,8 +202,8 @@
         <!-- Hero Widgets Banner (Memento Mori + Daily Goal) -->
         <div class="overview-hero-grid">
           <!-- Memento Mori Widget -->
-          <div class="memento-mori-widget">
-            <div class="memento-mori-label">
+          <div class="memento-mori-widget" id="memento-mori-widget">
+            <div class="memento-mori-header">
               <div class="memento-title-group">
                 <svg class="memento-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -205,13 +211,15 @@
                 </svg>
                 <span data-i18n="overview.mementoMori">Time Left Today</span>
               </div>
-              <span id="memento-mori-time">0h 0m</span>
+              <div class="memento-mori-badge" id="memento-mori-badge">
+                <span id="memento-mori-time">0h 0m</span>
+              </div>
             </div>
             <div class="memento-mori-bar-container">
               <div class="memento-mori-bar" id="memento-mori-bar"></div>
             </div>
-            <div class="memento-mori-info">
-              <span class="memento-mori-quote" data-i18n="overview.mementoQuote">Memento Mori: Remember you must die</span>
+            <div class="memento-mori-footer">
+              <span id="memento-mori-quote" class="memento-mori-quote" data-i18n="overview.mementoQuote">Memento Mori: Remember you must die</span>
             </div>
           </div>
 
@@ -406,15 +414,293 @@
               </div>
             </div>
           </div>
+
+          <div class="energy-eco-bridge">
+            <button type="button" id="btn-goto-eco" class="eco-bridge-btn">
+              <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 4 13C4 7 11 3 20 3c0 9-4 16-9 17Z"></path>
+                <path d="M11 20c0-4.5 3.5-8 8-9"></path>
+              </svg>
+              <span data-i18n="eco.viewReceiptLink">🌱 View Your Eco Receipt & Equivalents</span>
+              <span class="bridge-arrow">→</span>
+            </button>
+          </div>
         </article>
       </section>
 
+      <section class="page" id="page-eco" aria-label="Eco-Area page">
+        <div class="eco-container">
+          <!-- Filter Bar Header -->
+          <div class="eco-toolbar">
+            <div class="eco-toolbar-titles">
+              <h3 data-i18n="eco.title">Tüketim Fişi & Eko-Alan</h3>
+              <p class="eco-toolbar-subtitle" data-i18n="eco.subtitle">Elektrik tüketiminizin somut gerçek hayat karşılıkları</p>
+            </div>
+            <div class="energy-segmented" role="tablist" aria-label="Eco Period">
+              <button type="button" class="energy-mode-btn eco-period-btn active" data-period="daily"
+                data-i18n="eco.periodDaily">Günlük (Bugün)</button>
+              <button type="button" class="energy-mode-btn eco-period-btn" data-period="weekly"
+                data-i18n="eco.periodWeekly">Haftalık (7 Gün)</button>
+              <button type="button" class="energy-mode-btn eco-period-btn" data-period="monthly"
+                data-i18n="eco.periodMonthly">Aylık (30 Gün)</button>
+              <button type="button" class="energy-mode-btn eco-period-btn" data-period="custom"
+                data-i18n="eco.periodCustom">Özel Aralık</button>
+            </div>
+          </div>
+
+          <!-- Custom Date Picker Container -->
+          <div id="eco-date-picker-container" class="custom-date-picker" style="display: none;">
+            <div class="date-input-group">
+              <label for="eco-start-date" data-i18n="daily.startDate">Start Date</label>
+              <input type="date" id="eco-start-date" class="modern-date-input" />
+            </div>
+            <div class="date-input-group">
+              <label for="eco-end-date" data-i18n="daily.endDate">End Date</label>
+              <input type="date" id="eco-end-date" class="modern-date-input" />
+            </div>
+            <button type="button" id="eco-apply-btn" class="btn-productive" data-i18n="daily.apply">Apply</button>
+          </div>
+
+          <!-- Main Eco Layout: Receipt & Tips Grid -->
+          <div class="eco-layout-grid">
+            <!-- Left/Center: The Thermal Receipt -->
+            <div class="receipt-wrapper">
+              <article class="thermal-receipt" id="thermal-receipt">
+                <!-- Receipt Jagged Top -->
+                <div class="receipt-edge top"></div>
+
+                <!-- Receipt Header -->
+                <div class="receipt-header">
+                  <div class="receipt-logo">
+                    <span class="receipt-logo-mark">K</span>
+                    <span class="receipt-brand">KAIROS</span>
+                  </div>
+                  <h4 class="receipt-title" data-i18n="eco.receiptHeader">TÜKETİM FİŞİ</h4>
+                  <p class="receipt-sub" data-i18n="eco.receiptSub">KAIROS RESMİ EKO RAPORU</p>
+                  <div class="receipt-meta">
+                    <span id="eco-receipt-timestamp">11.09.2026 01:10</span>
+                    <span id="eco-receipt-id">#ECO-2026-0911</span>
+                  </div>
+                  <div class="receipt-divider dashed"></div>
+                </div>
+
+                <!-- Receipt Consumption Focus -->
+                <div class="receipt-kwh-section">
+                  <span class="receipt-kwh-label" data-i18n="eco.totalLabel">TOPLAM TÜKETİM</span>
+                  <div class="receipt-kwh-val"><span id="eco-receipt-kwh">0.000</span></div>
+                  <span class="receipt-kwh-unit" data-i18n="eco.unitKwh">kilowatt-saat (kWh)</span>
+                  <div id="eco-receipt-daily-avg-container" style="display: none; margin-top: 5px; font-size: 0.8rem; color: #555;">
+                    <span data-i18n="eco.dailyAvgLabel">Günlük Ortalama:</span> <strong id="eco-receipt-daily-avg" style="color: #1a1918;">0.000</strong> kWh
+                  </div>
+                  <div class="receipt-divider solid"></div>
+                </div>
+
+                <!-- Receipt Equivalents List -->
+                <div class="receipt-body">
+                  <h5 class="receipt-body-title" data-i18n="eco.equivTitle">SOMUT KARŞILIKLAR</h5>
+                  
+                  <ul class="receipt-items-list" id="eco-receipt-items">
+                    <!-- Dynamic Equivalents Rows -->
+                    <li class="receipt-item">
+                      <span class="item-icon">💧</span>
+                      <span class="item-text" id="eco-val-water">Üretimde harcanan su: yaklaşık 0 litre</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">🌲</span>
+                      <span class="item-text" id="eco-val-carbon">Karbon salımı: 0 kg CO₂ — bir ağacın 0 günlük emilimine eşdeğer</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">📱</span>
+                      <span class="item-text" id="eco-val-phones">0 tam telefon şarjına eşdeğer</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">💡</span>
+                      <span class="item-text" id="eco-val-led">10W LED ampulü 0 saat yakar</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">🧺</span>
+                      <span class="item-text" id="eco-val-laundry">0 çamaşır makinesi devrine eşdeğer</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">🚗</span>
+                      <span class="item-text" id="eco-val-ev">Elektrikli araçla 0 km yola eşdeğer</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">🏠</span>
+                      <span class="item-text" id="eco-val-home">Bir hanenin %0 günlük tüketimine denk</span>
+                    </li>
+                    <li class="receipt-item">
+                      <span class="item-icon">☕</span>
+                      <span class="item-text" id="eco-val-kettle">Su ısıtıcıda 0 kez su kaynatmaya eşdeğer</span>
+                    </li>
+                  </ul>
+
+                  <!-- Gamification Stamp Badge -->
+                  <div class="receipt-stamp-container">
+                    <div class="receipt-stamp" id="eco-stamp" data-i18n="eco.stampChampion">TASARRUF ŞAMPİYONU</div>
+                  </div>
+
+                  <div class="receipt-divider dashed"></div>
+                </div>
+
+                <!-- Receipt Footer & Barcode -->
+                <div class="receipt-footer">
+                  <p class="receipt-disclaimer-title" data-i18n="eco.disclaimerTitle">REFERANS DEĞERLER İLE HESAPLANMIŞTIR — GERÇEK DEĞERLER KAYNAĞA GÖRE DEĞİŞİR</p>
+                  <p class="receipt-disclaimer-note" data-i18n="eco.disclaimerText">Not: Su ve CO₂ katsayıları enerji kaynağına (kömür, doğalgaz, hidroelektrik) ve bölgeye göre büyük ölçüde değişir. Buradaki sayılar örnek/gösterge niteliğindedir.</p>
+
+                  <div class="receipt-barcode-wrap">
+                    <div class="receipt-barcode"></div>
+                    <span class="receipt-barcode-code">* KAIROS-ECO-SAVINGS *</span>
+                  </div>
+
+                  <p class="receipt-thankyou" data-i18n="eco.thankYou">DOĞAYI KORUDUĞUNUZ İÇİN TEŞEKKÜR EDERİZ</p>
+                </div>
+
+                <!-- Receipt Jagged Bottom -->
+                <div class="receipt-edge bottom"></div>
+              </article>
+
+              <!-- Receipt Action Buttons -->
+              <div class="receipt-actions">
+                <button type="button" id="eco-copy-btn" class="btn-productive btn-receipt-action">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span data-i18n="eco.copyBtn">Fişi Kopyala</span>
+                </button>
+                <span id="eco-copy-feedback" class="eco-copy-feedback" style="display: none;" data-i18n="eco.copied">Fiş Panoya Kopyalandı!</span>
+              </div>
+            </div>
+
+            <!-- Right: Eco Tips & Insights Panel -->
+            <div class="eco-sidebar-panel">
+              <article class="panel eco-tips-card">
+                <div class="eco-tips-header">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eco-tips-icon">
+                    <path d="M11 20A7 7 0 0 1 4 13C4 7 11 3 20 3c0 9-4 16-9 17Z"></path>
+                    <path d="M11 20c0-4.5 3.5-8 8-9"></path>
+                  </svg>
+                  <h4 data-i18n="eco.tipsTitle">Yeşil Bilişim İpuçları</h4>
+                </div>
+
+                <div class="eco-tip-item">
+                  <div class="tip-badge">💡</div>
+                  <div>
+                    <strong data-i18n="eco.tip1Title">Ekran Parlaklığını Düşürün</strong>
+                    <p data-i18n="eco.tip1Desc">Ekran parlaklığını %100'den %70'e çekmek monitör enerji tüketiminde %20'ye varan tasarruf sağlar.</p>
+                  </div>
+                </div>
+
+                <div class="eco-tip-item">
+                  <div class="tip-badge">⚡</div>
+                  <div>
+                    <strong data-i18n="eco.tip2Title">Boştaki Arka Plan Uygulamalarını Kapatın</strong>
+                    <p data-i18n="eco.tip2Desc">Arka planda gereksiz çalışan uygulamalar işlemcinin derin uyku moduna geçmesini engeller.</p>
+                  </div>
+                </div>
+
+                <div class="eco-tip-item">
+                  <div class="tip-badge">🌙</div>
+                  <div>
+                    <strong data-i18n="eco.tip3Title">Karanlık Temaları Tercih Edin</strong>
+                    <p data-i18n="eco.tip3Desc">Özellikle OLED ve gelişmiş panellerde koyu pikseller daha az enerji harcar.</p>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="page" id="page-apps" aria-label="App usage page">
-        <article class="panel">
-          <h3 data-i18n="apps.title">Most Used Apps</h3>
-          <ul id="app-usage-list">
-            <!-- App usage items injected here -->
-          </ul>
+        <!-- App Usage Top Stat Cards (Matching Main Menu / Overview) -->
+        <div class="cards-grid app-usage-stats-grid">
+          <article class="card stat-card stat-total">
+            <div class="stat-card-header">
+              <div class="stat-card-icon icon-total">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <h3 data-i18n="apps.statTotalTime">Total Screen Time</h3>
+            </div>
+            <p id="app-stat-total-time">0h 0m</p>
+          </article>
+
+          <article class="card stat-card stat-longest">
+            <div class="stat-card-header">
+              <div class="stat-card-icon icon-longest">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+              </div>
+              <h3 data-i18n="apps.statAppCount">Active Apps</h3>
+            </div>
+            <p id="app-stat-count">0</p>
+          </article>
+
+          <article class="card stat-card stat-productive">
+            <div class="stat-card-header">
+              <div class="stat-card-icon icon-productive">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <h3 data-i18n="apps.statTopApp">Top Application</h3>
+            </div>
+            <p id="app-stat-top" class="stat-top-app-value" title="—">—</p>
+          </article>
+
+          <article class="card stat-card stat-distracting">
+            <div class="stat-card-header">
+              <div class="stat-card-icon icon-distracting">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <h3 data-i18n="apps.statDistractingTime">Distracting Time</h3>
+            </div>
+            <p id="app-stat-distracting-time">0h 0m</p>
+          </article>
+        </div>
+
+        <!-- App Usage Main Panel -->
+        <article class="panel app-usage-panel">
+          <div class="app-usage-header">
+            <div class="app-usage-title-group">
+              <h3 data-i18n="apps.title">Most Used Apps</h3>
+              <span id="app-usage-subtitle" class="app-usage-subtitle">0 apps recorded today</span>
+            </div>
+            <div class="app-usage-search-box">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="app-usage-search" class="app-search-input" data-i18n-placeholder="apps.searchPlaceholder" placeholder="Search applications..." autocomplete="off" />
+              <button id="app-usage-search-clear" class="app-search-clear" style="display:none;" aria-label="Clear search">×</button>
+            </div>
+          </div>
+
+          <div class="app-usage-filter-bar">
+            <div class="energy-segmented app-category-filters" role="tablist">
+              <button type="button" class="energy-mode-btn app-filter-btn active" data-filter="all" data-i18n="apps.filterAll">All</button>
+              <button type="button" class="energy-mode-btn app-filter-btn" data-filter="productive" data-i18n="categories.productive">Productive</button>
+              <button type="button" class="energy-mode-btn app-filter-btn" data-filter="neutral" data-i18n="categories.neutral">Neutral</button>
+              <button type="button" class="energy-mode-btn app-filter-btn" data-filter="distracting" data-i18n="categories.distracting">Distracting</button>
+              <button type="button" class="energy-mode-btn app-filter-btn" data-filter="uncategorized" data-i18n="categories.uncategorized">Uncategorized</button>
+            </div>
+          </div>
+
+          <div id="app-usage-list-container" class="app-usage-list-container">
+            <!-- App cards rendered dynamically -->
+          </div>
         </article>
       </section>
 

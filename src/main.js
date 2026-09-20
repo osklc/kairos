@@ -714,26 +714,245 @@ async function loadAppCategories() {
   }
 }
 
-async function fetchAndRenderAppUsage() {
-  const listEl = document.getElementById("app-usage-list");
-  if (!listEl) return;
+let appUsagesData = [];
+let appCategoryMap = new Map();
+let currentAppFilter = "all";
+let currentAppSearch = "";
+let isAppUsageUIInitialized = false;
 
-  try {
-    const usages = await invoke("get_app_usage");
-    listEl.innerHTML = "";
+function initAppUsageUI() {
+  if (isAppUsageUIInitialized) return;
+  isAppUsageUIInitialized = true;
 
-    if (usages.length === 0) {
-      listEl.innerHTML = `<p style='color: var(--text-muted);'>${translate("apps.noActivity")}</p>`;
-      return;
+  const searchInput = document.getElementById("app-usage-search");
+  const clearBtn = document.getElementById("app-usage-search-clear");
+  const filterBtns = document.querySelectorAll(".app-filter-btn");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      currentAppSearch = e.target.value.trim().toLowerCase();
+      if (clearBtn) {
+        clearBtn.style.display = currentAppSearch.length > 0 ? "block" : "none";
+      }
+      renderAppUsageList();
+    });
+  }
+
+  if (clearBtn && searchInput) {
+    clearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      currentAppSearch = "";
+      clearBtn.style.display = "none";
+      searchInput.focus();
+      renderAppUsageList();
+    });
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentAppFilter = btn.getAttribute("data-filter") || "all";
+      renderAppUsageList();
+    });
+  });
+}
+
+function updateAppUsageStatCards() {
+  const totalSeconds = appUsagesData.reduce((acc, u) => acc + (u.duration_seconds || 0), 0);
+  const appCount = appUsagesData.length;
+  const topApp = appUsagesData[0];
+  const distractingSeconds = appUsagesData
+    .filter(u => (u.category || "uncategorized") === "distracting")
+    .reduce((acc, u) => acc + (u.duration_seconds || 0), 0);
+
+  const totalTimeEl = document.getElementById("app-stat-total-time");
+  const countEl = document.getElementById("app-stat-count");
+  const topEl = document.getElementById("app-stat-top");
+  const distractingTimeEl = document.getElementById("app-stat-distracting-time");
+  const subtitleEl = document.getElementById("app-usage-subtitle");
+
+  if (totalTimeEl) totalTimeEl.textContent = formatDuration(totalSeconds);
+  if (countEl) countEl.textContent = `${appCount}`;
+  if (topEl) {
+    if (topApp) {
+      topEl.textContent = `${topApp.app_name}`;
+      topEl.title = `${topApp.app_name} (${formatDuration(topApp.duration_seconds)})`;
+    } else {
+      topEl.textContent = "—";
+      topEl.title = "—";
+    }
+  }
+  if (distractingTimeEl) distractingTimeEl.textContent = formatDuration(distractingSeconds);
+  if (subtitleEl) {
+    subtitleEl.textContent = `${appCount} ${translate("apps.trackedToday")}`;
+  }
+}
+
+function renderAppUsageList() {
+  const containerEl = document.getElementById("app-usage-list-container");
+  if (!containerEl) return;
+
+  containerEl.innerHTML = "";
+
+  if (appUsagesData.length === 0) {
+    containerEl.innerHTML = `
+      <div class="app-usage-empty">
+        <div class="app-empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+        </div>
+        <p class="app-empty-title">${translate("apps.noActivity")}</p>
+        <p class="app-empty-subtitle">${translate("apps.openAppToTrack")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Filter items
+  const filtered = appUsagesData.filter(item => {
+    const category = item.category || "uncategorized";
+    const matchesFilter = (currentAppFilter === "all") || (category === currentAppFilter);
+    const matchesSearch = !currentAppSearch || item.app_name.toLowerCase().includes(currentAppSearch);
+    return matchesFilter && matchesSearch;
+  });
+
+  if (filtered.length === 0) {
+    containerEl.innerHTML = `
+      <div class="app-usage-empty">
+        <div class="app-empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <p class="app-empty-title">${translate("apps.noMatching")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Calculate total seconds among all apps for relative percentage calculation
+  const totalSecondsAll = appUsagesData.reduce((acc, u) => acc + (u.duration_seconds || 0), 0) || 1;
+
+  filtered.forEach(item => {
+    const originalRank = appUsagesData.findIndex(u => u.app_name === item.app_name) + 1;
+    const duration = item.duration_seconds || 0;
+    const percentage = Math.max(1, Math.round((duration / totalSecondsAll) * 1000) / 10);
+    const category = item.category || "uncategorized";
+
+    // Monogram (1 or 2 uppercase letters)
+    const cleanName = item.app_name.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    let initials = "AP";
+    if (parts.length >= 2) {
+      initials = (parts[0][0] + parts[1][0]).toUpperCase();
+    } else if (parts.length === 1 && parts[0].length >= 2) {
+      initials = parts[0].slice(0, 2).toUpperCase();
+    } else if (parts.length === 1) {
+      initials = parts[0][0].toUpperCase();
     }
 
-    usages.forEach(usage => {
-      const li = document.createElement("li");
-      li.textContent = `${usage.app_name}: ${formatDuration(usage.duration_seconds)}`;
-      listEl.appendChild(li);
-    });
+    const card = document.createElement("div");
+    card.className = "app-item-card";
+
+    let rankClass = "";
+    if (originalRank === 1) rankClass = "rank-1";
+    else if (originalRank === 2) rankClass = "rank-2";
+    else if (originalRank === 3) rankClass = "rank-3";
+
+    card.innerHTML = `
+      <div class="app-item-main">
+        <div class="app-item-identity">
+          <span class="app-rank-badge ${rankClass}">#${originalRank}</span>
+          <div class="app-avatar cat-${category}">
+            <span>${initials}</span>
+          </div>
+          <div class="app-meta">
+            <span class="app-name" title="${item.app_name}">${item.app_name}</span>
+            <div class="app-cat-badge-container">
+              <select class="app-cat-select cat-${category}" data-app="${item.app_name}">
+                <option value="productive" ${category === "productive" ? "selected" : ""}>${translate("categories.productive")}</option>
+                <option value="neutral" ${category === "neutral" ? "selected" : ""}>${translate("categories.neutral")}</option>
+                <option value="distracting" ${category === "distracting" ? "selected" : ""}>${translate("categories.distracting")}</option>
+                <option value="uncategorized" ${category === "uncategorized" ? "selected" : ""}>${translate("categories.uncategorized")}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="app-item-metrics">
+          <span class="app-duration-val">${formatDuration(duration)}</span>
+          <span class="app-percent-val">${percentage}%</span>
+        </div>
+      </div>
+      <div class="app-progress-track">
+        <div class="app-progress-fill cat-${category}" style="width: ${Math.min(100, percentage)}%;"></div>
+      </div>
+    `;
+
+    // Category changer event listener
+    const selectEl = card.querySelector(".app-cat-select");
+    if (selectEl) {
+      selectEl.addEventListener("change", async (e) => {
+        const newCat = e.target.value;
+        try {
+          await invoke("set_app_category", { appName: item.app_name, category: newCat });
+          item.category = newCat;
+          appCategoryMap.set(item.app_name, newCat);
+
+          // Update this item's styling directly
+          selectEl.className = `app-cat-select cat-${newCat}`;
+          const avatar = card.querySelector(".app-avatar");
+          if (avatar) avatar.className = `app-avatar cat-${newCat}`;
+          const progressFill = card.querySelector(".app-progress-fill");
+          if (progressFill) progressFill.className = `app-progress-fill cat-${newCat}`;
+
+          // Recompute distracting time & stats
+          updateAppUsageStatCards();
+          fetchAndRenderSummary();
+          if (typeof renderDailyPieChart === "function") {
+            renderDailyPieChart();
+          }
+        } catch (err) {
+          console.error("Failed to update app category:", err);
+        }
+      });
+    }
+
+    containerEl.appendChild(card);
+  });
+}
+
+async function fetchAndRenderAppUsage() {
+  initAppUsageUI();
+
+  try {
+    const [usages, allApps] = await Promise.all([
+      invoke("get_app_usage").catch(err => {
+        console.error("Failed to fetch app usage:", err);
+        return [];
+      }),
+      invoke("get_all_apps").catch(err => {
+        console.error("Failed to fetch all apps for categories:", err);
+        return [];
+      })
+    ]);
+
+    appCategoryMap = new Map((allApps || []).map(a => [a.app_name, a.category]));
+
+    // Attach category to each usage entry
+    appUsagesData = (usages || []).map(u => ({
+      ...u,
+      category: u.category || appCategoryMap.get(u.app_name) || "uncategorized"
+    }));
+
+    updateAppUsageStatCards();
+    renderAppUsageList();
   } catch (err) {
-    console.error("Failed to fetch app usage:", err);
+    console.error("Error in fetchAndRenderAppUsage:", err);
   }
 }
 
@@ -1223,6 +1442,9 @@ function setLanguage(languageCode, pageTitleEl, pageTitleKeys, currentDateEl) {
   if (document.querySelector("#page-settings")?.classList.contains("active")) {
     loadAppCategories();
   }
+  if (document.querySelector("#page-eco")?.classList.contains("active")) {
+    renderEcoReceipt();
+  }
 }
 
 function setTheme(theme, themeButtons) {
@@ -1552,6 +1774,237 @@ async function initEnergyUI() {
   updateEnergyUI();
 }
 
+// ───── Eco-Area & Thermal Receipt ─────
+let ecoPeriod = "daily";
+
+function getEcoEnergyData(period = ecoPeriod) {
+  const now = new Date();
+  let totalKwh = 0;
+  let dayCount = 1;
+
+  if (period === "weekly") {
+    dayCount = 7;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const storageKey = ENERGY_STORAGE_PREFIX + dayKey;
+      totalKwh += parseFloat(localStorage.getItem(storageKey) || "0");
+    }
+  } else if (period === "monthly") {
+    dayCount = 30;
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const storageKey = ENERGY_STORAGE_PREFIX + dayKey;
+      totalKwh += parseFloat(localStorage.getItem(storageKey) || "0");
+    }
+  } else if (period === "custom") {
+    const startInput = document.getElementById("eco-start-date")?.value;
+    const endInput = document.getElementById("eco-end-date")?.value;
+    if (startInput && endInput) {
+      const start = new Date(startInput + "T00:00:00");
+      const end = new Date(endInput + "T00:00:00");
+      const dayDiff = Math.max(0, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+      dayCount = dayDiff + 1;
+      for (let i = 0; i <= dayDiff; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const storageKey = ENERGY_STORAGE_PREFIX + dayKey;
+        totalKwh += parseFloat(localStorage.getItem(storageKey) || "0");
+      }
+    }
+  } else {
+    // Daily: today's total from localStorage
+    dayCount = 1;
+    totalKwh = loadTodayTotalKWh();
+  }
+
+  totalKwh = Math.max(0, totalKwh);
+  const dailyAvgKwh = dayCount > 0 ? totalKwh / dayCount : totalKwh;
+
+  return { totalKwh, dayCount, dailyAvgKwh };
+}
+
+function calculateEcoEquivalents(kwh) {
+  // Reference coefficients:
+  // Water: ~5.0 L / kWh
+  // Carbon: ~0.43 kg CO2 / kWh
+  // Trees: 1 mature tree absorbs ~21 kg CO2 / year (~0.0575 kg/day). treeDays = carbonKg / 0.0575
+  // Smartphone charge: 1 full charge is ~12 Wh (0.012 kWh) -> ~83.3 charges/kWh
+  // 10W LED Bulb: 1 kWh = 100 hours
+  // Laundry machine: 1 full A+++ cycle = ~1.2 kWh -> cycles = kwh / 1.2
+  // Electric Vehicle: ~18 kWh / 100km -> 5.55 km / kWh
+  // Average Household: ~9 kWh / day -> % of daily household usage = (kwh / 9) * 100
+  // Kettle: 1 kettle boiling (~1.5L) = ~0.1 kWh -> 10 kettles / kWh
+
+  const waterLiters = (kwh * 5.0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const carbonKg = (kwh * 0.43).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const treeDays = (kwh * 0.43 / 0.0575).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const phones = Math.round(kwh * 83.33).toLocaleString();
+  const ledHours = Math.round(kwh * 100).toLocaleString();
+  const laundry = (kwh / 1.2).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const evKm = (kwh * 5.55).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const household = Math.round((kwh / 9.0) * 100).toLocaleString();
+  const kettle = Math.round(kwh * 10).toLocaleString();
+
+  return {
+    waterLiters,
+    carbonKg,
+    treeDays,
+    phones,
+    ledHours,
+    laundry,
+    evKm,
+    household,
+    kettle,
+  };
+}
+
+function renderEcoReceipt() {
+  const { totalKwh, dayCount, dailyAvgKwh } = getEcoEnergyData(ecoPeriod);
+  const equiv = calculateEcoEquivalents(totalKwh);
+
+  const now = getCurrentDate ? getCurrentDate() : new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const mins = String(now.getMinutes()).padStart(2, "0");
+
+  const timestampEl = document.getElementById("eco-receipt-timestamp");
+  if (timestampEl) {
+    timestampEl.textContent = `${day}.${month}.${year} ${hours}:${mins}`;
+  }
+
+  const receiptIdEl = document.getElementById("eco-receipt-id");
+  if (receiptIdEl) {
+    receiptIdEl.textContent = `#ECO-${year}-${month}${day}`;
+  }
+
+  // Total kWh readout
+  const kwhEl = document.getElementById("eco-receipt-kwh");
+  if (kwhEl) {
+    kwhEl.textContent = totalKwh.toFixed(3);
+  }
+
+  // Daily average readout (shown whenever period spans more than 1 day)
+  const dailyAvgContainer = document.getElementById("eco-receipt-daily-avg-container");
+  const dailyAvgEl = document.getElementById("eco-receipt-daily-avg");
+  if (dailyAvgContainer && dailyAvgEl) {
+    if (dayCount > 1) {
+      dailyAvgContainer.style.display = "block";
+      dailyAvgEl.textContent = dailyAvgKwh.toFixed(3);
+    } else {
+      dailyAvgContainer.style.display = "none";
+    }
+  }
+
+  const setItemText = (id, templateKey, val, extraVal) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let text = translate(templateKey) || "";
+    text = text.replace("{val}", val);
+    if (extraVal !== undefined) {
+      text = text.replace("{treeVal}", extraVal);
+    }
+    el.textContent = text;
+  };
+
+  setItemText("eco-val-water", "eco.water", equiv.waterLiters);
+  setItemText("eco-val-carbon", "eco.carbon", equiv.carbonKg, equiv.treeDays);
+  setItemText("eco-val-phones", "eco.phones", equiv.phones);
+  setItemText("eco-val-led", "eco.ledBulb", equiv.ledHours);
+  setItemText("eco-val-laundry", "eco.laundry", equiv.laundry);
+  setItemText("eco-val-ev", "eco.ev", equiv.evKm);
+  setItemText("eco-val-home", "eco.household", equiv.household);
+  setItemText("eco-val-kettle", "eco.kettle", equiv.kettle);
+
+  // Normalized stamp evaluation:
+  // Evaluated on normalized daily average kWh regardless of whether 1 day, 7 days, 30 days, or custom days are selected.
+  const stampEl = document.getElementById("eco-stamp");
+  if (stampEl) {
+    // Reference standard for typical desktop/laptop computer:
+    // <= 2.0 kWh / day is high-efficiency / eco champion
+    // > 2.0 kWh / day is moderate / aware
+    if (dailyAvgKwh <= 2.0) {
+      stampEl.textContent = translate("eco.stampChampion") || "TASARRUF ŞAMPİYONU";
+      stampEl.classList.remove("eco-aware");
+    } else {
+      stampEl.textContent = translate("eco.stampEco") || "ÇEVRE DOSTU";
+      stampEl.classList.add("eco-aware");
+    }
+  }
+}
+
+function copyReceiptToClipboard() {
+  const { totalKwh, dayCount, dailyAvgKwh } = getEcoEnergyData(ecoPeriod);
+  const equiv = calculateEcoEquivalents(totalKwh);
+  const now = getCurrentDate ? getCurrentDate() : new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const mins = String(now.getMinutes()).padStart(2, "0");
+  const dateStr = `${day}.${month}.${year} ${hours}:${mins}`;
+
+  let periodName = translate("eco.periodDaily") || "Günlük";
+  if (ecoPeriod === "weekly") periodName = translate("eco.periodWeekly") || "Haftalık";
+  else if (ecoPeriod === "monthly") periodName = translate("eco.periodMonthly") || "Aylık";
+  else if (ecoPeriod === "custom") periodName = translate("eco.periodCustom") || "Özel";
+
+  const receiptHeader = translate("eco.receiptHeader") || "TÜKETİM FİŞİ";
+  const equivTitle = translate("eco.equivTitle") || "SOMUT KARŞILIKLAR";
+
+  const lines = [
+    "====================================",
+    `          ${receiptHeader}`,
+    `         KAIROS ECO AUDIT`,
+    "====================================",
+    `Tarih / Date : ${dateStr}`,
+    `Fiş / ID     : #ECO-${year}-${month}${day}`,
+    `Dönem / Range: ${periodName} (${dayCount} gün)`,
+    "------------------------------------",
+    `TOPLAM TÜKETİM : ${totalKwh.toFixed(3)} kWh`,
+  ];
+
+  if (dayCount > 1) {
+    lines.push(`GÜNLÜK ORTALAMA: ${dailyAvgKwh.toFixed(3)} kWh/gün`);
+  }
+
+  lines.push(
+    "------------------------------------",
+    `${equivTitle}:`,
+    `• Su / Water       : ~${equiv.waterLiters} L`,
+    `• Karbon / CO₂     : ~${equiv.carbonKg} kg CO₂ (${equiv.treeDays} ağaç-günü)`,
+    `• Telefon Şarjı    : ~${equiv.phones} tam şarj`,
+    `• 10W LED Ampul    : ~${equiv.ledHours} saat`,
+    `• Çamaşır Makinesi : ~${equiv.laundry} devir`,
+    `• Elektrikli Araç  : ~${equiv.evKm} km yol`,
+    `• Hane Tüketim Payı: ~%${equiv.household}`,
+    `• Su Isıtıcı Kettle: ~${equiv.kettle} kez`,
+    "------------------------------------",
+    `[ ${dailyAvgKwh <= 2.0 ? (translate("eco.stampChampion") || "TASARRUF ŞAMPİYONU") : (translate("eco.stampEco") || "ÇEVRE DOSTU")} ]`,
+    translate("eco.thankYou") || "DOĞAYI KORUDUĞUNUZ İÇİN TEŞEKKÜR EDERİZ",
+    "===================================="
+  );
+
+  const fullText = lines.join("\n");
+  navigator.clipboard.writeText(fullText).then(() => {
+    const feedbackEl = document.getElementById("eco-copy-feedback");
+    if (feedbackEl) {
+      feedbackEl.style.display = "inline-block";
+      setTimeout(() => {
+        feedbackEl.style.display = "none";
+      }, 3000);
+    }
+  }).catch((err) => {
+    console.error("Failed to copy receipt:", err);
+  });
+}
+
 function loadPomodoroSettings() {
   try {
     const saved = localStorage.getItem(POMO_SETTINGS_KEY);
@@ -1855,6 +2308,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     apps: "pages.apps",
     daily: "pages.daily",
     energy: "pages.energy",
+    eco: "pages.eco",
     pomodoro: "pages.pomodoro",
     sounds: "pages.sounds",
     todo: "pages.todo",
@@ -1871,6 +2325,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   initMementoMoriWidget();
   initDailyGoalSettingsUI();
   initAppLimits();
+  initAppUsageUI();
 
   function refreshActivePage() {
     renderCurrentDate(currentDateEl);
@@ -1884,6 +2339,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       fetchAndRenderAppUsage();
     } else if (pageId === "page-energy") {
       updateEnergyUI();
+    } else if (pageId === "page-eco") {
+      renderEcoReceipt();
     } else if (pageId === "page-settings") {
       loadAppCategories();
       populateAppLimitSelect();
@@ -1954,6 +2411,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       } else if (pageKey === "energy") {
         loadEnergySettings();
         updateEnergyUI();
+      } else if (pageKey === "eco") {
+        renderEcoReceipt();
       } else if (pageKey === "pomodoro") {
         loadPomodoroSettings();
         applyPomodoroSettingsToUI();
@@ -2925,3 +3384,65 @@ document.getElementById("export-json-btn")?.addEventListener("click", () => hand
     }
     renderDailyPieChart();
   });
+
+  // 4. Eco Controls
+  const ecoContainer = document.getElementById("eco-date-picker-container");
+  const ecoStart = document.getElementById("eco-start-date");
+  const ecoEnd = document.getElementById("eco-end-date");
+  const ecoApply = document.getElementById("eco-apply-btn");
+  const ecoCopyBtn = document.getElementById("eco-copy-btn");
+  const gotoEcoBtn = document.getElementById("btn-goto-eco");
+
+  if (ecoStart && ecoEnd) {
+    ecoStart.value = defaultStart;
+    ecoEnd.value = defaultEnd;
+  }
+
+  document.querySelectorAll(".eco-period-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      document.querySelectorAll(".eco-period-btn").forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
+      const target = e.target;
+      target.classList.add("active");
+      target.setAttribute("aria-pressed", "true");
+
+      ecoPeriod = target.getAttribute("data-period") || "daily";
+
+      if (ecoPeriod === "custom") {
+        if (ecoContainer) ecoContainer.style.display = "flex";
+      } else {
+        if (ecoContainer) ecoContainer.style.display = "none";
+      }
+      renderEcoReceipt();
+    });
+  });
+
+  ecoApply?.addEventListener("click", () => {
+    const startVal = ecoStart?.value;
+    const endVal = ecoEnd?.value;
+    if (!startVal || !endVal) {
+      alert(translate("daily.alertSelectDates"));
+      return;
+    }
+    if (new Date(startVal) > new Date(endVal)) {
+      alert(translate("daily.alertInvalidRange"));
+      return;
+    }
+    renderEcoReceipt();
+  });
+
+  ecoCopyBtn?.addEventListener("click", () => {
+    copyReceiptToClipboard();
+  });
+
+  gotoEcoBtn?.addEventListener("click", () => {
+    const ecoNavBtn = document.querySelector('.nav-link[data-page="eco"]');
+    if (ecoNavBtn) {
+      ecoNavBtn.click();
+    }
+  });
+
+  // Initial render of eco receipt
+  renderEcoReceipt();
